@@ -39,12 +39,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (err) {
-        const msg = typeof err.message === 'string' ? err.message : '';
-        setError(
-          msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('exceeded') || !msg
-            ? 'Too many attempts. Please wait a few minutes and try again.'
-            : msg
-        );
+        setError('Could not send reset link. Please wait a few minutes and try again.');
         setSubmitting(false);
       } else {
         setResetSent(true);
