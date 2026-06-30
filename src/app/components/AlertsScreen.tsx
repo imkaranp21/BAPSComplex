@@ -8,38 +8,64 @@ interface AlertsScreenProps {
   onSave: () => void;
 }
 
+const ALERT_GROUPS = [
+  {
+    label: 'COURTS & FIELDS',
+    alerts: [
+      { key: 'cricket', label: 'Cricket / Futsal', description: 'Notify when the court is available' },
+      { key: 'volleyball', label: 'Volleyball', description: 'Notify when the court opens up' },
+    ],
+  },
+  {
+    label: 'GAMES',
+    alerts: [
+      { key: 'tableTennis', label: 'Table Tennis', description: 'Notify when a table is free' },
+      { key: 'pool', label: 'Pool Table', description: 'Notify when the table is available' },
+      { key: 'darts', label: 'Darts', description: 'Notify when the darts area is open' },
+    ],
+  },
+  {
+    label: 'FITNESS',
+    alerts: [
+      { key: 'gym', label: 'Gym', description: 'Notify when capacity drops below 80%' },
+    ],
+  },
+  {
+    label: 'GENERAL',
+    alerts: [
+      { key: 'availability', label: 'Any space opens up', description: 'Get notified when any space becomes available' },
+    ],
+  },
+];
+
+type AlertKey = 'cricket' | 'volleyball' | 'tableTennis' | 'pool' | 'darts' | 'gym' | 'availability';
+
 export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
-  const [alerts, setAlerts] = useState({
-    volleyball: true,
-    pickleball: false,
-    basketball: false,
-    badminton: false,
-    squash: false,
+  const [alerts, setAlerts] = useState<Record<AlertKey, boolean>>({
+    cricket: false,
+    volleyball: false,
     tableTennis: false,
     pool: false,
-    availability: true
+    darts: false,
+    gym: true,
+    availability: true,
   });
 
-  const toggleAlert = (key: keyof typeof alerts) => {
+  const toggleAlert = (key: AlertKey) => {
     setAlerts(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = () => {
-    const enabledAlerts = Object.entries(alerts)
-      .filter(([_, enabled]) => enabled)
-      .map(([key]) => key);
-
+    const count = Object.values(alerts).filter(Boolean).length;
     toast.success('Alert preferences saved!', {
-      description: `${enabledAlerts.length} ${enabledAlerts.length === 1 ? 'alert' : 'alerts'} enabled`,
+      description: `${count} ${count === 1 ? 'alert' : 'alerts'} enabled`,
       duration: 2000,
     });
-
     setTimeout(() => { onSave(); }, 500);
   };
 
   return (
     <div className="bg-[#FFFBF5]">
-      {/* Header */}
       <div className="pb-4 border-b border-stone-200">
         <div className="flex items-center mb-2">
           <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors">
@@ -54,59 +80,34 @@ export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
       </div>
 
       <div className="py-6">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-stone-500 text-sm mb-6"
-        >
-          Get notified when spaces become available or activities start
+        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-stone-500 text-sm mb-6">
+          Get notified when spaces become available
         </motion.p>
 
-        {/* Multipurpose Courts */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-3 mb-6"
-        >
-          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">MULTIPURPOSE COURTS</div>
-          <AlertToggle label="Volleyball Club" description="Notify when sessions start" enabled={alerts.volleyball} onToggle={() => toggleAlert('volleyball')} />
-          <AlertToggle label="Pickleball" description="Notify when courts are available" enabled={alerts.pickleball} onToggle={() => toggleAlert('pickleball')} />
-          <AlertToggle label="Basketball" description="Notify when courts are open" enabled={alerts.basketball} onToggle={() => toggleAlert('basketball')} />
-          <AlertToggle label="Badminton" description="Notify when courts are available" enabled={alerts.badminton} onToggle={() => toggleAlert('badminton')} />
-        </motion.div>
+        {ALERT_GROUPS.map((group, gi) => (
+          <motion.div
+            key={group.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: gi * 0.1 }}
+            className="mb-6"
+          >
+            <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">{group.label}</div>
+            <div className="space-y-3">
+              {group.alerts.map(alert => (
+                <AlertToggle
+                  key={alert.key}
+                  label={alert.label}
+                  description={alert.description}
+                  enabled={alerts[alert.key as AlertKey]}
+                  onToggle={() => toggleAlert(alert.key as AlertKey)}
+                />
+              ))}
+            </div>
+          </motion.div>
+        ))}
 
-        {/* Other Activities */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-3 mb-6"
-        >
-          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">OTHER ACTIVITIES</div>
-          <AlertToggle label="Squash Courts" description="Notify when courts open up" enabled={alerts.squash} onToggle={() => toggleAlert('squash')} />
-          <AlertToggle label="Table Tennis" description="Notify when tables are free" enabled={alerts.tableTennis} onToggle={() => toggleAlert('tableTennis')} />
-          <AlertToggle label="Pool Tables" description="Notify when tables are available" enabled={alerts.pool} onToggle={() => toggleAlert('pool')} />
-        </motion.div>
-
-        {/* General */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-3"
-        >
-          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">GENERAL ALERTS</div>
-          <AlertToggle label="Space availability" description="Get notified when any space opens up" enabled={alerts.availability} onToggle={() => toggleAlert('availability')} />
-        </motion.div>
-
-        {/* Save Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-4">
           <button
             onClick={handleSave}
             className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors"
@@ -115,7 +116,6 @@ export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
           </button>
         </motion.div>
 
-        {/* Tip */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,7 +148,7 @@ function AlertToggle({ label, description, enabled, onToggle }: AlertToggleProps
         </div>
         <button
           onClick={onToggle}
-          className={`relative w-12 h-7 rounded-full transition-colors ${
+          className={`relative w-12 h-7 rounded-full transition-colors ml-4 flex-shrink-0 ${
             enabled ? 'bg-orange-600' : 'bg-stone-300'
           }`}
         >

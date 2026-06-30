@@ -2,122 +2,97 @@ import { motion } from 'motion/react';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import type { SpaceType } from '../App';
+import { SPACES } from '../data/spaces';
 
 interface ScheduleScreenProps {
   onBack: () => void;
   space: SpaceType | null;
 }
 
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const times = ['6 AM', '8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM', '8 PM'];
+
+const scheduleEvents: Record<SpaceType, { day: string; time: string; activity: string; note: string }[]> = {
+  gym: [
+    { day: 'Mon', time: '6 AM', activity: 'Open', note: 'All members' },
+    { day: 'Tue', time: '6 AM', activity: 'Open', note: 'All members' },
+    { day: 'Wed', time: '6 AM', activity: 'Open', note: 'All members' },
+    { day: 'Thu', time: '6 AM', activity: 'Open', note: 'All members' },
+    { day: 'Fri', time: '6 AM', activity: 'Open', note: 'All members' },
+    { day: 'Sat', time: '8 AM', activity: 'Open', note: 'All members' },
+    { day: 'Sun', time: '8 AM', activity: 'Open', note: 'All members' },
+  ],
+  'cricket-futsal': [
+    { day: 'Mon', time: '8 AM', activity: 'Cricket', note: 'Open play' },
+    { day: 'Mon', time: '6 PM', activity: 'Futsal', note: 'League night' },
+    { day: 'Wed', time: '8 AM', activity: 'Cricket', note: 'Open play' },
+    { day: 'Wed', time: '6 PM', activity: 'Futsal', note: 'League night' },
+    { day: 'Fri', time: '8 AM', activity: 'Cricket', note: 'Open play' },
+    { day: 'Sat', time: '10 AM', activity: 'Cricket', note: 'Match day' },
+    { day: 'Sun', time: '10 AM', activity: 'Futsal', note: 'Open play' },
+  ],
+  volleyball: [
+    { day: 'Mon', time: '8 AM', activity: 'Volleyball', note: 'Open play' },
+    { day: 'Tue', time: '6 PM', activity: 'Volleyball', note: 'Club session' },
+    { day: 'Thu', time: '8 AM', activity: 'Volleyball', note: 'Open play' },
+    { day: 'Thu', time: '6 PM', activity: 'Volleyball', note: 'Club session' },
+    { day: 'Sat', time: '10 AM', activity: 'Volleyball', note: 'Open play' },
+    { day: 'Sun', time: '12 PM', activity: 'Volleyball', note: 'Open play' },
+  ],
+  'table-tennis': [
+    { day: 'Mon', time: '8 AM', activity: 'Table Tennis', note: 'Open play' },
+    { day: 'Tue', time: '8 AM', activity: 'Table Tennis', note: 'Open play' },
+    { day: 'Wed', time: '6 PM', activity: 'Table Tennis', note: 'Club night' },
+    { day: 'Thu', time: '8 AM', activity: 'Table Tennis', note: 'Open play' },
+    { day: 'Fri', time: '6 PM', activity: 'Table Tennis', note: 'Tournament' },
+    { day: 'Sat', time: '10 AM', activity: 'Table Tennis', note: 'Open play' },
+    { day: 'Sun', time: '10 AM', activity: 'Table Tennis', note: 'Open play' },
+  ],
+  'pool-table': [
+    { day: 'Mon', time: '10 AM', activity: 'Pool', note: 'Open play' },
+    { day: 'Tue', time: '10 AM', activity: 'Pool', note: 'Open play' },
+    { day: 'Wed', time: '10 AM', activity: 'Pool', note: 'Open play' },
+    { day: 'Wed', time: '6 PM', activity: 'Pool', note: 'League' },
+    { day: 'Thu', time: '10 AM', activity: 'Pool', note: 'Open play' },
+    { day: 'Fri', time: '10 AM', activity: 'Pool', note: 'Open play' },
+    { day: 'Sat', time: '12 PM', activity: 'Pool', note: 'Open play' },
+    { day: 'Sun', time: '12 PM', activity: 'Pool', note: 'Open play' },
+  ],
+  darts: [
+    { day: 'Mon', time: '10 AM', activity: 'Darts', note: 'Open play' },
+    { day: 'Tue', time: '10 AM', activity: 'Darts', note: 'Open play' },
+    { day: 'Wed', time: '10 AM', activity: 'Darts', note: 'Open play' },
+    { day: 'Thu', time: '10 AM', activity: 'Darts', note: 'Open play' },
+    { day: 'Fri', time: '6 PM', activity: 'Darts', note: 'Club night' },
+    { day: 'Sat', time: '12 PM', activity: 'Darts', note: 'Open play' },
+    { day: 'Sun', time: '12 PM', activity: 'Darts', note: 'Open play' },
+  ],
+};
+
+const activityColors: Record<string, string> = {
+  Open: 'bg-stone-400',
+  Cricket: 'bg-green-600',
+  Futsal: 'bg-blue-600',
+  Volleyball: 'bg-purple-600',
+  'Table Tennis': 'bg-pink-600',
+  Pool: 'bg-indigo-600',
+  Darts: 'bg-yellow-600',
+  League: 'bg-orange-600',
+  Tournament: 'bg-red-600',
+};
+
+function getColor(activity: string) {
+  return activityColors[activity] || 'bg-stone-400';
+}
+
 export function ScheduleScreen({ onBack, space }: ScheduleScreenProps) {
-  const [selectedSpace, setSelectedSpace] = useState<SpaceType>(space || 'multipurpose-courts');
-
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const times = ['8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM', '8 PM'];
-
-  const scheduleData = {
-    'multipurpose-courts': {
-      title: 'Multipurpose Courts',
-      events: [
-        { day: 'Mon', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Mon', time: '6 PM', activity: 'Volleyball Club', court: 'Court 2' },
-        { day: 'Tue', time: '8 AM', activity: 'Basketball', court: 'Court 1' },
-        { day: 'Tue', time: '2 PM', activity: 'Pickleball', court: 'Court 3' },
-        { day: 'Wed', time: '10 AM', activity: 'Badminton', court: 'Court 2' },
-        { day: 'Wed', time: '6 PM', activity: 'Volleyball Club', court: 'Court 2' },
-        { day: 'Thu', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Thu', time: '2 PM', activity: 'Pickleball', court: 'Court 3' },
-        { day: 'Fri', time: '8 AM', activity: 'Basketball', court: 'Courts 1-2' },
-        { day: 'Fri', time: '4 PM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Sat', time: '10 AM', activity: 'Basketball Tournament', court: 'All Courts' },
-        { day: 'Sat', time: '4 PM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Sun', time: '12 PM', activity: 'Open Play', court: 'All Courts' },
-      ],
-      upcoming: [
-        { day: 'Monday', time: '6:00 PM', activity: 'Volleyball Club', location: 'Court 2', spots: '12 spots available' },
-        { day: 'Tuesday', time: '2:00 PM', activity: 'Pickleball', location: 'Court 3', spots: 'Walk-in welcome' },
-        { day: 'Wednesday', time: '6:00 PM', activity: 'Volleyball Club', location: 'Court 2', spots: '8 spots available' },
-        { day: 'Thursday', time: '2:00 PM', activity: 'Pickleball', location: 'Court 3', spots: 'Walk-in welcome' },
-        { day: 'Saturday', time: '10:00 AM', activity: 'Basketball Tournament', location: 'All Courts', spots: 'Registration required' },
-      ]
-    },
-    'pool-tables': {
-      title: 'Pool Tables',
-      events: [
-        { day: 'Mon', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Tue', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Wed', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Wed', time: '6 PM', activity: 'Pool League', court: 'Tables 1-2' },
-        { day: 'Thu', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Fri', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Sat', time: '12 PM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Sun', time: '12 PM', activity: 'Open Play', court: 'All Tables' },
-      ],
-      upcoming: [
-        { day: 'Wednesday', time: '6:00 PM', activity: 'Pool League', location: 'Tables 1-2', spots: 'Members only' },
-        { day: 'Daily', time: '10:00 AM - 10:00 PM', activity: 'Open Play', location: 'All tables', spots: 'First come, first served' },
-      ]
-    },
-    'table-tennis': {
-      title: 'Table Tennis',
-      events: [
-        { day: 'Mon', time: '8 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Mon', time: '6 PM', activity: 'TT Club', court: 'All Tables' },
-        { day: 'Tue', time: '8 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Wed', time: '8 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Wed', time: '6 PM', activity: 'TT Club', court: 'All Tables' },
-        { day: 'Thu', time: '8 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Fri', time: '8 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Fri', time: '6 PM', activity: 'TT Tournament', court: 'All Tables' },
-        { day: 'Sat', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-        { day: 'Sun', time: '10 AM', activity: 'Open Play', court: 'All Tables' },
-      ],
-      upcoming: [
-        { day: 'Monday', time: '6:00 PM', activity: 'Table Tennis Club', location: 'All tables', spots: '15 spots available' },
-        { day: 'Wednesday', time: '6:00 PM', activity: 'Table Tennis Club', location: 'All tables', spots: '15 spots available' },
-        { day: 'Friday', time: '6:00 PM', activity: 'TT Tournament', location: 'All tables', spots: 'Registration required' },
-      ]
-    },
-    'squash-courts': {
-      title: 'Squash Courts',
-      events: [
-        { day: 'Mon', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Mon', time: '6 PM', activity: 'Squash Club', court: 'Courts 1-2' },
-        { day: 'Tue', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Wed', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Wed', time: '6 PM', activity: 'Squash Club', court: 'Courts 1-2' },
-        { day: 'Thu', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Fri', time: '8 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Fri', time: '6 PM', activity: 'Squash Club', court: 'Courts 1-2' },
-        { day: 'Sat', time: '10 AM', activity: 'Open Play', court: 'All Courts' },
-        { day: 'Sun', time: '10 AM', activity: 'Open Play', court: 'All Courts' },
-      ],
-      upcoming: [
-        { day: 'Monday', time: '6:00 PM', activity: 'Squash Club', location: 'Courts 1-2', spots: '8 spots available' },
-        { day: 'Wednesday', time: '6:00 PM', activity: 'Squash Club', location: 'Courts 1-2', spots: '8 spots available' },
-        { day: 'Friday', time: '6:00 PM', activity: 'Squash Club', location: 'Courts 1-2', spots: '8 spots available' },
-      ]
-    }
-  };
-
-  const currentSchedule = scheduleData[selectedSpace];
+  const [selectedSpace, setSelectedSpace] = useState<SpaceType>(space || 'gym');
   const showAllSchedules = space === null;
-
-  const getActivityColor = (activity: string) => {
-    if (activity.includes('Volleyball')) return 'bg-purple-600';
-    if (activity.includes('Basketball')) return 'bg-orange-600';
-    if (activity.includes('Pickleball')) return 'bg-green-600';
-    if (activity.includes('Badminton')) return 'bg-yellow-600';
-    if (activity.includes('Squash')) return 'bg-red-600';
-    if (activity.includes('TT') || activity.includes('Table Tennis')) return 'bg-pink-600';
-    if (activity.includes('Pool')) return 'bg-indigo-600';
-    if (activity.includes('Tournament')) return 'bg-red-600';
-    if (activity.includes('Club') || activity.includes('League')) return 'bg-blue-600';
-    return 'bg-stone-400';
-  };
+  const events = scheduleEvents[selectedSpace] || [];
+  const selectedSpaceData = SPACES.find(s => s.id === selectedSpace)!;
 
   return (
     <div className="bg-[#FFFBF5]">
-      {/* Header */}
       <div className="pb-4 border-b border-stone-200">
         <div className="flex items-center mb-2">
           <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors">
@@ -125,7 +100,7 @@ export function ScheduleScreen({ onBack, space }: ScheduleScreenProps) {
           </button>
           <div className="flex-1 text-center">
             <div className="text-stone-400 text-xs">
-              {showAllSchedules ? '← Home' : `← ${currentSchedule.title}`}
+              {showAllSchedules ? '← Home' : `← ${selectedSpaceData.name}`}
             </div>
           </div>
           <div className="w-10" />
@@ -133,41 +108,36 @@ export function ScheduleScreen({ onBack, space }: ScheduleScreenProps) {
         <h1 className="text-xl font-bold text-stone-900">
           {showAllSchedules ? 'All Schedules' : 'Weekly Schedule'}
         </h1>
-        <p className="text-stone-400 text-sm mt-1">April 21-27, 2026</p>
+        <p className="text-stone-400 text-sm mt-1">Yogi Sports Complex · Nakuru</p>
       </div>
 
       <div className="py-6">
-        {/* Space Selector Tabs */}
+        {/* Space selector */}
         {showAllSchedules && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 overflow-x-auto"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 overflow-x-auto">
             <div className="flex gap-2 pb-2">
-              {(['multipurpose-courts', 'pool-tables', 'table-tennis', 'squash-courts'] as SpaceType[]).map(type => (
+              {SPACES.map(s => (
                 <button
-                  key={type}
-                  onClick={() => setSelectedSpace(type)}
-                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-colors ${
-                    selectedSpace === type
+                  key={s.id}
+                  onClick={() => setSelectedSpace(s.id)}
+                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-colors text-sm ${
+                    selectedSpace === s.id
                       ? 'bg-orange-600 text-white'
                       : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                   }`}
                 >
-                  {{ 'multipurpose-courts': 'Multipurpose', 'pool-tables': 'Pool Tables', 'table-tennis': 'Table Tennis', 'squash-courts': 'Squash Courts' }[type]}
+                  {s.name}
                 </button>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* Current Space Title */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-          <h2 className="text-stone-900 font-semibold text-lg">{currentSchedule.title}</h2>
-        </motion.div>
+        <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-stone-900 font-semibold text-lg mb-4">
+          {selectedSpaceData.name}
+        </motion.h2>
 
-        {/* Schedule Grid */}
+        {/* Schedule grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -187,18 +157,18 @@ export function ScheduleScreen({ onBack, space }: ScheduleScreenProps) {
               <tbody>
                 {times.map(time => (
                   <tr key={time} className="border-t border-stone-100">
-                    <td className="text-stone-400 text-xs py-3 pr-3 font-medium sticky left-0 bg-white">{time}</td>
+                    <td className="text-stone-400 text-xs py-3 pr-3 font-medium sticky left-0 bg-white whitespace-nowrap">{time}</td>
                     {days.map(day => {
-                      const events = currentSchedule.events.filter(e => e.day === day && e.time === time);
+                      const cellEvents = events.filter(e => e.day === day && e.time === time);
                       return (
-                        <td key={day} className="px-1 py-2">
-                          {events.map((event, idx) => (
+                        <td key={day} className="px-1 py-2 min-w-[70px]">
+                          {cellEvents.map((event, idx) => (
                             <div
                               key={idx}
-                              className={`${getActivityColor(event.activity)} text-white text-[10px] p-1.5 rounded mb-1 text-center leading-tight`}
+                              className={`${getColor(event.activity)} text-white text-[10px] p-1.5 rounded mb-1 text-center leading-tight`}
                             >
                               <div className="font-semibold">{event.activity}</div>
-                              <div className="text-[9px] opacity-90">{event.court}</div>
+                              <div className="text-[9px] opacity-90">{event.note}</div>
                             </div>
                           ))}
                         </td>
@@ -212,79 +182,18 @@ export function ScheduleScreen({ onBack, space }: ScheduleScreenProps) {
         </motion.div>
 
         {/* Legend */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">ACTIVITY KEY</div>
           <div className="flex flex-wrap gap-3">
-            {selectedSpace === 'multipurpose-courts' && (
-              <>
-                <LegendItem color="bg-purple-600" label="Volleyball" />
-                <LegendItem color="bg-orange-600" label="Basketball" />
-                <LegendItem color="bg-green-600" label="Pickleball" />
-                <LegendItem color="bg-yellow-600" label="Badminton" />
-                <LegendItem color="bg-stone-400" label="Open Play" />
-              </>
-            )}
-            {selectedSpace === 'squash-courts' && (
-              <>
-                <LegendItem color="bg-blue-600" label="Squash Club" />
-                <LegendItem color="bg-stone-400" label="Open Play" />
-              </>
-            )}
-            {selectedSpace === 'table-tennis' && (
-              <>
-                <LegendItem color="bg-blue-600" label="TT Club" />
-                <LegendItem color="bg-red-600" label="Tournament" />
-                <LegendItem color="bg-stone-400" label="Open Play" />
-              </>
-            )}
-            {selectedSpace === 'pool-tables' && (
-              <>
-                <LegendItem color="bg-blue-600" label="Pool League" />
-                <LegendItem color="bg-stone-400" label="Open Play" />
-              </>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Upcoming Events */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">UPCOMING THIS WEEK</div>
-          <div className="space-y-2">
-            {currentSchedule.upcoming.map((event, index) => (
-              <div key={index} className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-stone-900 font-semibold mb-1">{event.activity}</h3>
-                    <p className="text-stone-500 text-sm mb-1">{event.day} at {event.time}</p>
-                    <p className="text-stone-400 text-xs">{event.location} • {event.spots}</p>
-                  </div>
-                  <div className={`${getActivityColor(event.activity)} text-white px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ml-2`}>
-                    Scheduled
-                  </div>
-                </div>
+            {[...new Set(events.map(e => e.activity))].map(activity => (
+              <div key={activity} className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded ${getColor(activity)}`} />
+                <span className="text-stone-500 text-xs">{activity}</span>
               </div>
             ))}
           </div>
         </motion.div>
       </div>
-    </div>
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`w-3 h-3 rounded ${color}`} />
-      <span className="text-stone-500 text-xs">{label}</span>
     </div>
   );
 }

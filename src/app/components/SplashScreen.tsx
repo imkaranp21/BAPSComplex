@@ -29,7 +29,8 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         </div>
 
         <h1 className="text-5xl font-bold text-white mb-4">TimeSlot</h1>
-        <p className="text-orange-100 text-lg">BAPS Sports Complex</p>
+        <p className="text-orange-100 text-lg">Yogi Sports Complex</p>
+        <p className="text-orange-200 text-sm mt-1">Nakuru, Kenya</p>
       </motion.div>
 
       <motion.button

@@ -25,7 +25,7 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
           </svg>
         </div>
         <span className="text-xl font-bold text-stone-900 tracking-tight">TimeSlot</span>
-        <span className="text-sm text-stone-400 font-normal hidden lg:block">BAPS Sports Complex</span>
+        <span className="text-sm text-stone-400 font-normal hidden lg:block">Yogi Sports Complex · Nakuru</span>
       </div>
       <div className="flex items-center gap-1">
         {tabs.map(tab => (

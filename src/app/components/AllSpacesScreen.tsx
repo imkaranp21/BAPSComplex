@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Filter } from 'lucide-react';
 import { useState } from 'react';
 import type { SpaceType } from '../App';
+import { SPACES } from '../data/spaces';
 
 interface AllSpacesScreenProps {
   onBack: () => void;
@@ -14,25 +15,14 @@ interface AllSpacesScreenProps {
 export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFilter, onClearFilter }: AllSpacesScreenProps) {
   const [filterMode, setFilterMode] = useState<'all' | 'available' | 'full'>('all');
 
-  const allSpaces = [
-    { type: 'pool-tables' as SpaceType, name: 'Pool Tables', available: 2, total: 4, status: 'open' as const, activities: ['Pool'] },
-    { type: 'table-tennis' as SpaceType, name: 'Table Tennis', available: 0, total: 3, status: 'full' as const, activities: ['Table Tennis'] },
-    { type: 'squash-courts' as SpaceType, name: 'Squash Courts', available: 1, total: 3, status: 'open' as const, activities: ['Squash'] },
-    { type: 'multipurpose-courts' as SpaceType, name: 'Multipurpose - Basketball', available: 1, total: 3, status: 'open' as const, activities: ['Basketball'], subtitle: 'Court 1 available' },
-    { type: 'multipurpose-courts' as SpaceType, name: 'Multipurpose - Volleyball', available: 1, total: 3, status: 'open' as const, activities: ['Volleyball'], subtitle: 'Next session 6:00 PM' },
-    { type: 'multipurpose-courts' as SpaceType, name: 'Multipurpose - Pickleball', available: 1, total: 3, status: 'open' as const, activities: ['Pickleball'], subtitle: 'Court 3 until 6:00 PM' },
-    { type: 'multipurpose-courts' as SpaceType, name: 'Multipurpose - Badminton', available: 1, total: 3, status: 'open' as const, activities: ['Badminton'], subtitle: 'Available for walk-in' },
-  ];
-
-  let spaces = allSpaces;
+  let spaces = SPACES;
   if (activeFilter && activeFilter !== 'All activities') {
-    spaces = allSpaces.filter(space =>
-      space.activities.some(a => a.toLowerCase() === activeFilter.toLowerCase())
+    spaces = SPACES.filter(s =>
+      s.activities.some(a => a.toLowerCase() === activeFilter.toLowerCase())
     );
   }
 
   const filteredSpaces = spaces.filter(space => {
-    if (filterMode === 'all') return true;
     if (filterMode === 'available') return space.available > 0;
     if (filterMode === 'full') return space.available === 0;
     return true;
@@ -40,7 +30,6 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
 
   return (
     <div className="bg-[#FFFBF5]">
-      {/* Header */}
       <div className="pb-4 border-b border-stone-200">
         <div className="flex items-center justify-between mb-4">
           <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors">
@@ -56,7 +45,7 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
           <div className="mb-3">
             <div className="inline-flex items-center gap-2 bg-orange-600 text-white text-sm px-3 py-1.5 rounded-full">
               <span>Activity: {activeFilter}</span>
-              <button onClick={onClearFilter} className="hover:text-orange-200 text-lg">×</button>
+              <button onClick={onClearFilter} className="hover:text-orange-200 text-lg leading-none">×</button>
             </div>
           </div>
         )}
@@ -68,11 +57,10 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
         </div>
       </div>
 
-      {/* Spaces List */}
       <div className="py-6 space-y-3">
         {filteredSpaces.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-stone-500">No spaces found for {activeFilter}</p>
+            <p className="text-stone-500">No spaces found{activeFilter ? ` for ${activeFilter}` : ''}</p>
             <button onClick={onClearFilter} className="mt-4 text-orange-600 hover:text-orange-700 font-medium">
               Clear filter
             </button>
@@ -80,25 +68,27 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
         ) : (
           filteredSpaces.map((space, index) => (
             <motion.button
-              key={`${space.type}-${index}`}
+              key={space.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onSpaceClick(space.type)}
+              onClick={() => onSpaceClick(space.id)}
               className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-stone-900 font-semibold mb-1">{space.name}</h3>
                   <p className="text-stone-500 text-sm">
-                    {space.subtitle || `${space.available} of ${space.total} available`}
+                    {space.hasCapacity
+                      ? `${space.available} of ${space.total} spots available`
+                      : space.description}
                   </p>
                 </div>
-                <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                  space.status === 'open' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
+                  space.available === 0 ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
                 }`}>
-                  {space.status === 'open' ? 'Open' : 'Full'}
+                  {space.available === 0 ? 'Full' : 'Open'}
                 </div>
               </div>
             </motion.button>
@@ -131,9 +121,7 @@ function FilterChip({ label, active, onClick }: FilterChipProps) {
     <button
       onClick={onClick}
       className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-        active
-          ? 'bg-orange-600 text-white'
-          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+        active ? 'bg-orange-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
       }`}
     >
       {label}

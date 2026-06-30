@@ -11,7 +11,7 @@ import { BottomNav } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'schedule' | 'alerts';
-export type SpaceType = 'pool-tables' | 'table-tennis' | 'squash-courts' | 'multipurpose-courts';
+export type SpaceType = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');

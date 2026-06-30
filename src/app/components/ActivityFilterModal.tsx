@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { ALL_ACTIVITIES } from '../data/spaces';
 
 interface ActivityFilterModalProps {
   onClose: () => void;
@@ -11,10 +12,8 @@ interface ActivityFilterModalProps {
 export function ActivityFilterModal({ onClose, onApply, currentFilter }: ActivityFilterModalProps) {
   const [selectedActivity, setSelectedActivity] = useState<string>(currentFilter || '');
 
-  const activities = ['Pickleball', 'Badminton', 'Basketball', 'Volleyball', 'All activities'];
-
   const handleApply = () => {
-    if (selectedActivity && selectedActivity !== 'All activities') {
+    if (selectedActivity) {
       onApply(selectedActivity);
     } else {
       onClose();
@@ -40,28 +39,23 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
         onClick={(e) => e.stopPropagation()}
         className="w-full bg-white rounded-t-3xl p-6 pb-8 shadow-xl"
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-stone-900">Filter by Activity</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
-          >
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-stone-100 transition-colors">
             <X className="w-6 h-6 text-stone-600" />
           </button>
         </div>
 
         <p className="text-stone-500 text-sm mb-6">Find spaces by activity type</p>
 
-        {/* Activity Selection */}
         <div className="mb-6">
           <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">SELECT ACTIVITY</div>
           <div className="grid grid-cols-2 gap-2">
-            {activities.map((activity) => (
+            {ALL_ACTIVITIES.map((activity) => (
               <button
                 key={activity}
                 onClick={() => setSelectedActivity(activity)}
-                className={`py-3 px-4 rounded-xl font-medium transition-colors ${
+                className={`py-3 px-4 rounded-xl font-medium transition-colors text-left ${
                   selectedActivity === activity
                     ? 'bg-orange-600 text-white'
                     : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
@@ -73,7 +67,6 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="space-y-2">
           <button
             onClick={handleApply}
