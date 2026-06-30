@@ -6,6 +6,7 @@ import { AllSpacesScreen } from './components/AllSpacesScreen';
 import { SpaceDetailScreen } from './components/SpaceDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { AuthScreen } from './components/AuthScreen';
+import { ResetPasswordScreen } from './components/ResetPasswordScreen';
 import { BookingModal } from './components/BookingModal';
 import { ActivityFilterModal } from './components/ActivityFilterModal';
 import { BottomNav, type NavTab } from './components/BottomNav';
@@ -16,7 +17,7 @@ export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profil
 export type SpaceType = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, isRecovery, clearRecovery } = useAuth();
 
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [selectedSpace, setSelectedSpace] = useState<SpaceType | null>(null);
@@ -33,6 +34,11 @@ export default function App() {
         <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  // Password reset link was clicked — show the set-new-password form
+  if (isRecovery) {
+    return <ResetPasswordScreen onDone={clearRecovery} />;
   }
 
   const handleGetStarted = () => {
