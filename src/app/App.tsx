@@ -17,7 +17,7 @@ export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profil
 export type SpaceType = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
-  const { user, loading, isRecovery, clearRecovery } = useAuth();
+  const { user, profile, loading, isRecovery, clearRecovery } = useAuth();
 
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [selectedSpace, setSelectedSpace] = useState<SpaceType | null>(null);
@@ -25,6 +25,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [activeNavTab, setActiveNavTab] = useState<NavTab>('home');
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPendingNotice, setShowPendingNotice] = useState(false);
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('home');
 
   // Don't render until auth state is resolved
@@ -56,6 +57,8 @@ export default function App() {
     if (!user) {
       setAuthReturnScreen('space-detail');
       setCurrentScreen('auth');
+    } else if (profile?.membership_status !== 'active') {
+      setShowPendingNotice(true);
     } else {
       setShowBookingModal(true);
     }
@@ -181,6 +184,27 @@ export default function App() {
           onApply={handleFilterApply}
           currentFilter={activeFilter}
         />
+      )}
+
+      {showPendingNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPendingNotice(false)} />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
+            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-amber-600 text-xl font-bold">!</span>
+            </div>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">Membership Pending</h2>
+            <p className="text-stone-500 text-sm mb-5">
+              Your account is awaiting approval from an admin. Once your membership is activated, you'll be able to book spaces.
+            </p>
+            <button
+              onClick={() => setShowPendingNotice(false)}
+              className="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
       )}
 
       {showBookingModal && selectedSpace && (
