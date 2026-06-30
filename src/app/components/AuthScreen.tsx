@@ -17,6 +17,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
@@ -63,7 +64,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         setSubmitting(false);
         return;
       }
-      const { error: err, needsConfirmation } = await signUp(email, password, fullName);
+      const { error: err, needsConfirmation } = await signUp(email, password, fullName, phone);
       if (err) {
         setError(err.message);
         setSubmitting(false);
@@ -196,17 +197,32 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1.5">Full Name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  placeholder="Your full name"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  autoComplete="name"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    autoComplete="name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                    Phone Number <span className="text-stone-400 font-normal">(so admin can identify you)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="+254 700 000 000"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    autoComplete="tel"
+                  />
+                </div>
+              </>
             )}
 
             <div>

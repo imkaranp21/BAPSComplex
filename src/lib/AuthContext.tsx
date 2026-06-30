@@ -20,7 +20,7 @@ interface AuthState {
   isRecovery: boolean;
   clearRecovery: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -86,12 +86,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   }
 
-  async function signUp(email: string, password: string, fullName: string) {
+  async function signUp(email: string, password: string, fullName: string, phone?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     });
+
+    // Save phone to profile once the trigger has created the row
+    if (!error && data.user && phone?.trim()) {
+      await supabase
+        .from('profiles')
+        .update({ phone: phone.trim() })
+        .eq('id', data.user.id);
+    }
+
     const needsConfirmation = !error && !!data.user && !data.session;
     return { error: error as Error | null, needsConfirmation };
   }
