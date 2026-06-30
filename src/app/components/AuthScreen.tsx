@@ -210,9 +210,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Phone Number <span className="text-stone-400 font-normal">(so admin can identify you)</span>
-                  </label>
+                  <label className="block text-sm font-medium text-stone-700 mb-1.5">Phone Number</label>
                   <input
                     type="tel"
                     value={phone}
