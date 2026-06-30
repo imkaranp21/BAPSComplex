@@ -90,21 +90,39 @@ create table public.bookings (
                  check (status in ('confirmed', 'cancelled', 'no_show')),
   notes          text,
   created_at     timestamptz not null default now(),
-  -- Prevent double-booking the same unit or space at the same time
-  constraint no_unit_overlap exclude using gist (
-    space_unit_id with =,
-    date with =,
-    tsrange(
-      (date || ' ' || start_time)::timestamp,
-      (date || ' ' || end_time)::timestamp
-    ) with &&
-  ) where (space_unit_id is not null and status = 'confirmed'),
   constraint end_after_start check (end_time > start_time)
 );
 
 create index bookings_user_id_idx  on public.bookings(user_id);
 create index bookings_space_id_idx on public.bookings(space_id);
 create index bookings_date_idx     on public.bookings(date);
+
+-- Function to check for booking conflicts before insert
+create or replace function public.check_booking_conflict()
+returns trigger language plpgsql as $$
+begin
+  if exists (
+    select 1 from public.bookings
+    where status = 'confirmed'
+      and date = new.date
+      and (
+        (new.space_unit_id is not null and space_unit_id = new.space_unit_id)
+        or
+        (new.space_unit_id is null and space_id = new.space_id)
+      )
+      and start_time < new.end_time
+      and end_time > new.start_time
+      and id != coalesce(new.id, gen_random_uuid())
+  ) then
+    raise exception 'Booking conflict: this slot is already taken';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger bookings_conflict_check
+  before insert or update on public.bookings
+  for each row execute function public.check_booking_conflict();
 
 -- ── Gym Check-ins ────────────────────────────────────────────
 -- Tracks live gym occupancy (walk-in or member)
