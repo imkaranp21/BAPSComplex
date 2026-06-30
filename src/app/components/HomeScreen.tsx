@@ -12,27 +12,27 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activeFilter, onClearFilter }: HomeScreenProps) {
   return (
-    <div className="bg-[#2d2d2d]">
+    <div className="bg-[#FFFBF5]">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-700">
+      <div className="pb-4 border-b border-stone-200">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-white">Available Now</h1>
+          <h1 className="text-2xl font-bold text-stone-900">Available Now</h1>
           <button
             onClick={onFilterClick}
-            className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
           >
-            <Filter className="w-6 h-6 text-white" />
+            <Filter className="w-6 h-6 text-stone-600" />
           </button>
         </div>
         {activeFilter && (
-          <div className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm px-3 py-1 rounded-full">
+          <div className="inline-flex items-center gap-2 bg-orange-600 text-white text-sm px-3 py-1 rounded-full">
             <span>Filter: {activeFilter}</span>
-            <button onClick={onClearFilter} className="hover:text-gray-200 text-lg">×</button>
+            <button onClick={onClearFilter} className="hover:text-orange-200 text-lg">×</button>
           </div>
         )}
       </div>
 
-      <div className="px-6 py-6">
+      <div className="py-6">
         {/* NOW Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -40,8 +40,8 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm font-medium">NOW</div>
-            <div className="text-gray-500 text-xs">
+            <div className="text-stone-400 text-sm font-medium tracking-wide">NOW</div>
+            <div className="text-stone-400 text-xs">
               Updated: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
             </div>
           </div>
@@ -54,7 +54,6 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
               statusType="available"
               onClick={() => onSpaceClick('pool-tables')}
             />
-
             <SpaceCard
               title="Table Tennis"
               subtitle="3 tables total"
@@ -62,7 +61,6 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
               statusType="full"
               onClick={() => onSpaceClick('table-tennis')}
             />
-
             <SpaceCard
               title="Squash Courts"
               subtitle="3 courts total"
@@ -70,7 +68,6 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
               statusType="available"
               onClick={() => onSpaceClick('squash-courts')}
             />
-
             <SpaceCard
               title="Court 3 — Pickleball"
               subtitle="until 6:00 PM"
@@ -90,14 +87,14 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
         >
           <button
             onClick={onViewAllSpaces}
-            className="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-colors"
+            className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors"
           >
             View all spaces
           </button>
 
           <button
             onClick={onFilterClick}
-            className="w-full bg-[#3d3d3d] text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-[#4d4d4d] transition-colors"
+            className="w-full bg-stone-100 text-stone-800 font-semibold py-3.5 px-4 rounded-xl hover:bg-stone-200 transition-colors"
           >
             Filter by activity
           </button>
@@ -119,19 +116,19 @@ function SpaceCard({ title, subtitle, status, statusType, onClick }: SpaceCardPr
   const statusColors = {
     available: 'bg-green-600 text-white',
     full: 'bg-red-600 text-white',
-    active: 'bg-white text-black'
+    active: 'bg-orange-600 text-white'
   };
 
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full bg-[#3d3d3d] p-4 rounded-xl hover:bg-[#4d4d4d] transition-colors text-left"
+      className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-white font-semibold mb-1">{title}</h3>
-          <p className="text-gray-400 text-sm">{subtitle}</p>
+          <h3 className="text-stone-900 font-semibold mb-1">{title}</h3>
+          <p className="text-stone-500 text-sm">{subtitle}</p>
         </div>
         <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${statusColors[statusType]}`}>
           {status}

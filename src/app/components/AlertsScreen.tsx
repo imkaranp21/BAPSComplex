@@ -34,121 +34,70 @@ export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
       duration: 2000,
     });
 
-    setTimeout(() => {
-      onSave();
-    }, 500);
+    setTimeout(() => { onSave(); }, 500);
   };
 
   return (
-    <div className="bg-[#2d2d2d]">
+    <div className="bg-[#FFFBF5]">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-700">
+      <div className="pb-4 border-b border-stone-200">
         <div className="flex items-center mb-2">
-          <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-gray-700 transition-colors">
-            <ArrowLeft className="w-6 h-6 text-white" />
+          <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors">
+            <ArrowLeft className="w-6 h-6 text-stone-700" />
           </button>
           <div className="flex-1 text-center">
-            <div className="text-gray-400 text-xs">← Home</div>
+            <div className="text-stone-400 text-xs">← Home</div>
           </div>
           <div className="w-10" />
         </div>
-        <h1 className="text-2xl font-bold text-white">Alerts</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Alerts</h1>
       </div>
 
-      <div className="px-6 py-6">
-        {/* Description */}
+      <div className="py-6">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-gray-400 text-sm mb-6"
+          className="text-stone-500 text-sm mb-6"
         >
           Get notified when spaces become available or activities start
         </motion.p>
 
-        {/* Activity Alerts */}
+        {/* Multipurpose Courts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="space-y-3 mb-6"
         >
-          <div className="text-gray-400 text-sm font-medium mb-3">MULTIPURPOSE COURTS</div>
-
-          <AlertToggle
-            label="Volleyball Club"
-            description="Notify when sessions start"
-            enabled={alerts.volleyball}
-            onToggle={() => toggleAlert('volleyball')}
-          />
-
-          <AlertToggle
-            label="Pickleball"
-            description="Notify when courts are available"
-            enabled={alerts.pickleball}
-            onToggle={() => toggleAlert('pickleball')}
-          />
-
-          <AlertToggle
-            label="Basketball"
-            description="Notify when courts are open"
-            enabled={alerts.basketball}
-            onToggle={() => toggleAlert('basketball')}
-          />
-
-          <AlertToggle
-            label="Badminton"
-            description="Notify when courts are available"
-            enabled={alerts.badminton}
-            onToggle={() => toggleAlert('badminton')}
-          />
+          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">MULTIPURPOSE COURTS</div>
+          <AlertToggle label="Volleyball Club" description="Notify when sessions start" enabled={alerts.volleyball} onToggle={() => toggleAlert('volleyball')} />
+          <AlertToggle label="Pickleball" description="Notify when courts are available" enabled={alerts.pickleball} onToggle={() => toggleAlert('pickleball')} />
+          <AlertToggle label="Basketball" description="Notify when courts are open" enabled={alerts.basketball} onToggle={() => toggleAlert('basketball')} />
+          <AlertToggle label="Badminton" description="Notify when courts are available" enabled={alerts.badminton} onToggle={() => toggleAlert('badminton')} />
         </motion.div>
 
-        {/* Other Activity Alerts */}
+        {/* Other Activities */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="space-y-3 mb-6"
         >
-          <div className="text-gray-400 text-sm font-medium mb-3">OTHER ACTIVITIES</div>
-
-          <AlertToggle
-            label="Squash Courts"
-            description="Notify when courts open up"
-            enabled={alerts.squash}
-            onToggle={() => toggleAlert('squash')}
-          />
-
-          <AlertToggle
-            label="Table Tennis"
-            description="Notify when tables are free"
-            enabled={alerts.tableTennis}
-            onToggle={() => toggleAlert('tableTennis')}
-          />
-
-          <AlertToggle
-            label="Pool Tables"
-            description="Notify when tables are available"
-            enabled={alerts.pool}
-            onToggle={() => toggleAlert('pool')}
-          />
+          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">OTHER ACTIVITIES</div>
+          <AlertToggle label="Squash Courts" description="Notify when courts open up" enabled={alerts.squash} onToggle={() => toggleAlert('squash')} />
+          <AlertToggle label="Table Tennis" description="Notify when tables are free" enabled={alerts.tableTennis} onToggle={() => toggleAlert('tableTennis')} />
+          <AlertToggle label="Pool Tables" description="Notify when tables are available" enabled={alerts.pool} onToggle={() => toggleAlert('pool')} />
         </motion.div>
 
-        {/* General Alerts */}
+        {/* General */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="space-y-3"
         >
-          <div className="text-gray-400 text-sm font-medium mb-3">GENERAL ALERTS</div>
-
-          <AlertToggle
-            label="Space availability"
-            description="Get notified when any space opens up"
-            enabled={alerts.availability}
-            onToggle={() => toggleAlert('availability')}
-          />
+          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">GENERAL ALERTS</div>
+          <AlertToggle label="Space availability" description="Get notified when any space opens up" enabled={alerts.availability} onToggle={() => toggleAlert('availability')} />
         </motion.div>
 
         {/* Save Button */}
@@ -160,21 +109,21 @@ export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
         >
           <button
             onClick={handleSave}
-            className="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-colors"
+            className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors"
           >
             Save preferences
           </button>
         </motion.div>
 
-        {/* Info */}
+        {/* Tip */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 bg-[#3d3d3d] p-4 rounded-xl"
+          className="mt-6 bg-orange-50 border border-orange-200 p-4 rounded-xl"
         >
-          <p className="text-gray-400 text-sm">
-            💡 <span className="text-white font-medium">Tip:</span> Enable notifications in your device settings to receive real-time alerts.
+          <p className="text-stone-600 text-sm">
+            💡 <span className="text-stone-900 font-medium">Tip:</span> Enable notifications in your device settings to receive real-time alerts.
           </p>
         </motion.div>
       </div>
@@ -191,22 +140,22 @@ interface AlertToggleProps {
 
 function AlertToggle({ label, description, enabled, onToggle }: AlertToggleProps) {
   return (
-    <div className="bg-[#3d3d3d] p-4 rounded-xl">
+    <div className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-white font-semibold mb-1">{label}</h3>
-          <p className="text-gray-400 text-sm">{description}</p>
+          <h3 className="text-stone-900 font-semibold mb-1">{label}</h3>
+          <p className="text-stone-500 text-sm">{description}</p>
         </div>
         <button
           onClick={onToggle}
           className={`relative w-12 h-7 rounded-full transition-colors ${
-            enabled ? 'bg-blue-600' : 'bg-gray-600'
+            enabled ? 'bg-orange-600' : 'bg-stone-300'
           }`}
         >
           <motion.div
             animate={{ x: enabled ? 20 : 2 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="absolute top-1 w-5 h-5 bg-white rounded-full"
+            className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm"
           />
         </button>
       </div>

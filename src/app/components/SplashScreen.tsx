@@ -9,7 +9,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] flex flex-col items-center justify-center px-8"
+      className="min-h-screen bg-gradient-to-b from-orange-600 to-orange-800 flex flex-col items-center justify-center px-8"
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -18,20 +18,18 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         className="text-center mb-32"
       >
         <div className="mb-8">
-          <div className="w-24 h-24 mx-auto bg-white rounded-3xl flex items-center justify-center mb-6">
+          <div className="w-24 h-24 mx-auto bg-white rounded-3xl flex items-center justify-center mb-6 shadow-lg">
             <svg viewBox="0 0 24 24" fill="none" className="w-14 h-14">
-              <rect x="3" y="3" width="7" height="7" rx="1" fill="#1a1a1a" />
-              <rect x="14" y="3" width="7" height="7" rx="1" fill="#1a1a1a" />
-              <rect x="3" y="14" width="7" height="7" rx="1" fill="#1a1a1a" />
-              <rect x="14" y="14" width="7" height="7" rx="1" fill="#1a1a1a" />
+              <rect x="3" y="3" width="7" height="7" rx="1" fill="#EA580C" />
+              <rect x="14" y="3" width="7" height="7" rx="1" fill="#EA580C" />
+              <rect x="3" y="14" width="7" height="7" rx="1" fill="#EA580C" />
+              <rect x="14" y="14" width="7" height="7" rx="1" fill="#EA580C" />
             </svg>
           </div>
         </div>
 
         <h1 className="text-5xl font-bold text-white mb-4">TimeSlot</h1>
-        <p className="text-gray-400 text-lg">
-          Sports Complex Booking
-        </p>
+        <p className="text-orange-100 text-lg">BAPS Sports Complex</p>
       </motion.div>
 
       <motion.button
@@ -39,7 +37,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
         onClick={onGetStarted}
-        className="w-full max-w-sm bg-white text-black font-semibold py-4 px-8 rounded-2xl hover:bg-gray-200 transition-colors"
+        className="w-full max-w-sm bg-white text-orange-600 font-semibold py-4 px-8 rounded-2xl hover:bg-orange-50 transition-colors shadow-md"
       >
         Get started
       </motion.button>
@@ -48,7 +46,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="text-gray-500 text-sm mt-6"
+        className="text-orange-200 text-sm mt-6"
       >
         Reserve spaces. Track availability.
       </motion.p>

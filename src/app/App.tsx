@@ -81,7 +81,7 @@ export default function App() {
   const showNav = currentScreen !== 'splash';
 
   return (
-    <div className="min-h-screen bg-[#2d2d2d] flex flex-col">
+    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
       <Toaster position="top-center" theme="dark" richColors />
 
       {showNav && (

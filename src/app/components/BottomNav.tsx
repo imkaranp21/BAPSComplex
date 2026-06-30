@@ -7,7 +7,7 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#2d2d2d] border-t border-gray-700 pb-6 pt-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 pb-6 pt-2 shadow-lg">
       <div className="flex items-center justify-around px-4">
         <NavItem
           icon={<Home className="w-6 h-6" />}
@@ -49,12 +49,12 @@ function NavItem({ icon, label, active, onClick }: NavItemProps) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors"
+      className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-stone-100 transition-colors"
     >
-      <div className={active ? 'text-white' : 'text-gray-500'}>
+      <div className={active ? 'text-orange-600' : 'text-stone-400'}>
         {icon}
       </div>
-      <span className={`text-xs font-medium ${active ? 'text-white' : 'text-gray-500'}`}>
+      <span className={`text-xs font-medium ${active ? 'text-orange-600' : 'text-stone-400'}`}>
         {label}
       </span>
     </button>

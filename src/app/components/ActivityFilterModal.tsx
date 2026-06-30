@@ -30,7 +30,7 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-end"
+      className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-end"
       onClick={onClose}
     >
       <motion.div
@@ -38,25 +38,24 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full bg-[#2d2d2d] rounded-t-3xl p-6 pb-8"
+        className="w-full bg-white rounded-t-3xl p-6 pb-8 shadow-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Filter by Activity</h2>
+          <h2 className="text-xl font-bold text-stone-900">Filter by Activity</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 text-stone-600" />
           </button>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-400 text-sm mb-6">Find spaces by activity type</p>
+        <p className="text-stone-500 text-sm mb-6">Find spaces by activity type</p>
 
         {/* Activity Selection */}
         <div className="mb-6">
-          <div className="text-gray-400 text-sm font-medium mb-3">SELECT ACTIVITY</div>
+          <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">SELECT ACTIVITY</div>
           <div className="grid grid-cols-2 gap-2">
             {activities.map((activity) => (
               <button
@@ -64,8 +63,8 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
                 onClick={() => setSelectedActivity(activity)}
                 className={`py-3 px-4 rounded-xl font-medium transition-colors ${
                   selectedActivity === activity
-                    ? 'bg-white text-black'
-                    : 'bg-[#3d3d3d] text-white hover:bg-[#4d4d4d]'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
                 }`}
               >
                 {activity}
@@ -74,22 +73,22 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="space-y-2">
           <button
             onClick={handleApply}
             disabled={!selectedActivity}
             className={`w-full font-semibold py-3.5 px-4 rounded-xl transition-colors ${
               selectedActivity
-                ? 'bg-white text-black hover:bg-gray-200'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
+                : 'bg-stone-200 text-stone-400 cursor-not-allowed'
             }`}
           >
             Show results
           </button>
           <button
             onClick={handleClear}
-            className="w-full bg-[#3d3d3d] text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-[#4d4d4d] transition-colors"
+            className="w-full bg-stone-100 text-stone-800 font-semibold py-3.5 px-4 rounded-xl hover:bg-stone-200 transition-colors"
           >
             Clear filter
           </button>
