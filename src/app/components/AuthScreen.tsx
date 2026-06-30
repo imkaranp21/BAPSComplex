@@ -39,7 +39,12 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (err) {
-        setError(err.message);
+        const msg = typeof err.message === 'string' ? err.message : '';
+        setError(
+          msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('exceeded') || !msg
+            ? 'Too many attempts. Please wait a few minutes and try again.'
+            : msg
+        );
         setSubmitting(false);
       } else {
         setResetSent(true);
