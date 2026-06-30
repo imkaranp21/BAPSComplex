@@ -1,16 +1,17 @@
-import { Home, Grid3x3, Calendar, Bell } from 'lucide-react';
+import { Home, Grid3x3, CalendarCheck, User } from 'lucide-react';
+import type { NavTab } from './BottomNav';
 
 interface TopNavProps {
-  activeTab: 'home' | 'spaces' | 'schedule' | 'alerts';
-  onTabChange: (tab: 'home' | 'spaces' | 'schedule' | 'alerts') => void;
+  activeTab: NavTab;
+  onTabChange: (tab: NavTab) => void;
 }
 
 export function TopNav({ activeTab, onTabChange }: TopNavProps) {
-  const tabs = [
-    { id: 'home' as const, label: 'Home', icon: <Home className="w-4 h-4" /> },
-    { id: 'spaces' as const, label: 'Spaces', icon: <Grid3x3 className="w-4 h-4" /> },
-    { id: 'schedule' as const, label: 'Schedule', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'alerts' as const, label: 'Alerts', icon: <Bell className="w-4 h-4" /> },
+  const tabs: { id: NavTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'home',     label: 'Home',     icon: <Home className="w-4 h-4" /> },
+    { id: 'spaces',   label: 'Spaces',   icon: <Grid3x3 className="w-4 h-4" /> },
+    { id: 'bookings', label: 'Bookings', icon: <CalendarCheck className="w-4 h-4" /> },
+    { id: 'profile',  label: 'Profile',  icon: <User className="w-4 h-4" /> },
   ];
 
   return (
@@ -27,6 +28,7 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
         <span className="text-xl font-bold text-stone-900 tracking-tight">TimeSlot</span>
         <span className="text-sm text-stone-400 font-normal hidden lg:block">Yogi Sports Complex · Nakuru</span>
       </div>
+
       <div className="flex items-center gap-1">
         {tabs.map(tab => (
           <button

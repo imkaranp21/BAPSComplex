@@ -1,16 +1,15 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Users, CalendarPlus } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { getSpace } from '../data/spaces';
 
 interface SpaceDetailScreenProps {
   space: SpaceType;
   onBack: () => void;
-  onScheduleClick: () => void;
-  onAlertClick: () => void;
+  onBookClick: () => void;
 }
 
-export function SpaceDetailScreen({ space, onBack, onScheduleClick, onAlertClick }: SpaceDetailScreenProps) {
+export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScreenProps) {
   const spaceData = getSpace(space);
 
   return (
@@ -109,19 +108,13 @@ export function SpaceDetailScreen({ space, onBack, onScheduleClick, onAlertClick
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="space-y-3"
         >
           <button
-            onClick={onScheduleClick}
-            className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors"
+            onClick={onBookClick}
+            className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
           >
-            Weekly schedule
-          </button>
-          <button
-            onClick={onAlertClick}
-            className="w-full bg-stone-100 text-stone-800 font-semibold py-3.5 px-4 rounded-xl hover:bg-stone-200 transition-colors"
-          >
-            Set alert — notify when open
+            <CalendarPlus className="w-5 h-5" />
+            Book a Slot
           </button>
         </motion.div>
       </div>
