@@ -42,6 +42,7 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
     const { data } = await (supabase as any)
       .from('bookings')
       .select('id, date, start_time, end_time, status, spaces(name), space_units(name)')
+      .eq('user_id', user!.id)
       .order('date', { ascending: false })
       .order('start_time', { ascending: false })
       .limit(30);

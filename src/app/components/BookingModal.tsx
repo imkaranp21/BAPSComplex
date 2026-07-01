@@ -100,72 +100,44 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     setSelectedSlot(null);
 
     async function fetchUnavailable() {
-      // Fetch conflicting space IDs for cross-blocking (e.g. cricket ↔ volleyball/futsal)
+      // Collect all space IDs to block (this space + conflicting spaces)
       const conflictSlugs = SPACE_CONFLICTS[space] ?? [];
-      const conflictIdMap: Record<string, string> = {};
-      if (conflictSlugs.length > 0) {
-        const { data: conflictSpaces } = await (supabase as any)
-          .from('spaces').select('id, slug').in('slug', conflictSlugs);
-        (conflictSpaces ?? []).forEach((s: any) => { conflictIdMap[s.slug] = s.id; });
-      }
+      const allSlugs = [space, ...conflictSlugs];
+      const { data: spaceRows } = await (supabase as any)
+        .from('spaces').select('id, slug').in('slug', allSlugs);
+      const slugToId: Record<string, string> = {};
+      (spaceRows ?? []).forEach((s: any) => { slugToId[s.slug] = s.id; });
+      const allSpaceIds = allSlugs.map(s => slugToId[s]).filter(Boolean);
 
-      let spaceQuery = supabase
-        .from('bookings')
-        .select('start_time, end_time')
-        .eq('date', selectedDate)
-        .eq('status', 'confirmed');
-
-      if (selectedUnitId) {
-        spaceQuery = spaceQuery.eq('space_unit_id', selectedUnitId);
-      } else {
-        spaceQuery = spaceQuery.eq('space_id', dbSpaceId!);
-      }
-
-      const myQuery = supabase
-        .from('bookings')
-        .select('start_time, end_time')
-        .eq('date', selectedDate)
-        .eq('status', 'confirmed')
-        .eq('user_id', user!.id);
-
-      const closuresQuery = (supabase as any)
-        .from('space_closures')
-        .select('all_day, start_time, end_time')
-        .eq('space_id', dbSpaceId!)
-        .eq('date', selectedDate);
-
-      // One query per conflicting space
-      const conflictQueries = Object.values(conflictIdMap).map(cid =>
-        (supabase as any)
+      // SECURITY DEFINER RPC — sees all bookings regardless of RLS
+      const [blockedRes, myRes, closuresRes] = await Promise.all([
+        (supabase as any).rpc('get_blocked_slots', {
+          p_space_ids: allSpaceIds,
+          p_date: selectedDate,
+        }),
+        supabase
           .from('bookings')
           .select('start_time, end_time')
           .eq('date', selectedDate)
           .eq('status', 'confirmed')
-          .eq('space_id', cid)
-      );
-
-      const [{ data: spaceData }, { data: myData }, { data: closuresData }, ...conflictResults] =
-        await Promise.all([spaceQuery, myQuery, closuresQuery, ...conflictQueries]);
+          .eq('user_id', user!.id),
+        (supabase as any)
+          .from('space_closures')
+          .select('all_day, start_time, end_time')
+          .eq('space_id', dbSpaceId!)
+          .eq('date', selectedDate),
+      ]);
 
       const blocked = new Set<string>();
-      // Direct bookings on this space
-      (spaceData ?? []).forEach((b: any) => {
+      (blockedRes.data ?? []).forEach((b: any) => {
         TIME_SLOTS.forEach(slot => {
           if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
-        });
-      });
-      // Bookings on conflicting spaces
-      conflictResults.forEach(res => {
-        (res.data ?? []).forEach((b: any) => {
-          TIME_SLOTS.forEach(slot => {
-            if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
-          });
         });
       });
       setUnavailableSlots(blocked);
 
       const mine = new Set<string>();
-      (myData ?? []).forEach(b => {
+      (myRes.data ?? []).forEach((b: any) => {
         TIME_SLOTS.forEach(slot => {
           if (slot.start < b.end_time && slot.end > b.start_time) mine.add(slot.start);
         });
@@ -173,7 +145,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
       setMyBookedSlots(mine);
 
       const closed = new Set<string>();
-      (closuresData ?? []).forEach((c: any) => {
+      (closuresRes.data ?? []).forEach((c: any) => {
         TIME_SLOTS.forEach(slot => {
           if (c.all_day || (slot.start < c.end_time && slot.end > c.start_time)) {
             closed.add(slot.start);
