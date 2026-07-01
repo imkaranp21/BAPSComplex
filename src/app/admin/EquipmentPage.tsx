@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ArrowLeftRight, Loader2, Search, Check, X } from 'lucide-react';
+import { Package, ArrowLeftRight, Loader2, Search, Check, X, Plus, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
@@ -46,6 +46,14 @@ export function EquipmentPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Add / edit item state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editItem, setEditItem] = useState<Equipment | null>(null);
+  const [itemName, setItemName] = useState('');
+  const [itemQty, setItemQty] = useState(1);
+  const [savingItem, setSavingItem] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   // Issue modal state
   const [issueItem, setIssueItem] = useState<Equipment | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
@@ -80,41 +88,85 @@ export function EquipmentPage() {
       (supabase as any).from('equipment').select('id, name, total_quantity').eq('space_id', spaceId).order('name'),
       (supabase as any)
         .from('equipment_loans')
-        .select('id, equipment_id, quantity, lent_at, notes, member_id, profiles(full_name), equipment(name)')
-        .is('returned_at', null)
-        .eq('equipment.space_id', spaceId),
+        .select('id, equipment_id, quantity, lent_at, notes, member_id, profiles(full_name), equipment(name, space_id)')
+        .is('returned_at', null),
     ]);
 
-    const rawLoans = loansRes.data ?? [];
+    const rawLoans = (loansRes.data ?? []).filter((l: any) => l.equipment?.space_id === spaceId);
 
-    // Count how many of each equipment item is currently out
     const outCounts: Record<string, number> = {};
     rawLoans.forEach((l: any) => {
       if (l.equipment_id) outCounts[l.equipment_id] = (outCounts[l.equipment_id] ?? 0) + l.quantity;
     });
 
-    const eqList: Equipment[] = (eqRes.data ?? []).map((e: any) => ({
+    setEquipment((eqRes.data ?? []).map((e: any) => ({
       id: e.id,
       name: e.name,
       total_quantity: e.total_quantity,
       out: outCounts[e.id] ?? 0,
-    }));
-    setEquipment(eqList);
+    })));
 
-    const loanList: Loan[] = rawLoans
-      .filter((l: any) => l.equipment?.name)
-      .map((l: any) => ({
-        id: l.id,
-        equipment_id: l.equipment_id,
-        equipment_name: l.equipment?.name ?? '',
-        member_id: l.member_id,
-        member_name: l.profiles?.full_name ?? 'Unknown',
-        quantity: l.quantity,
-        lent_at: l.lent_at,
-        notes: l.notes,
-      }));
-    setLoans(loanList);
+    setLoans(rawLoans.filter((l: any) => l.equipment?.name).map((l: any) => ({
+      id: l.id,
+      equipment_id: l.equipment_id,
+      equipment_name: l.equipment?.name ?? '',
+      member_id: l.member_id,
+      member_name: l.profiles?.full_name ?? 'Unknown',
+      quantity: l.quantity,
+      lent_at: l.lent_at,
+      notes: l.notes,
+    })));
   }
+
+  // ── Inventory management ──
+
+  function openAdd() {
+    setEditItem(null);
+    setItemName('');
+    setItemQty(1);
+    setShowAddForm(true);
+  }
+
+  function openEdit(item: Equipment) {
+    setEditItem(item);
+    setItemName(item.name);
+    setItemQty(item.total_quantity);
+    setShowAddForm(true);
+  }
+
+  async function saveItem() {
+    if (!itemName.trim() || itemQty < 1) return;
+    setSavingItem(true);
+    const spaceId = spaceIds[activeSpace];
+
+    if (editItem) {
+      await (supabase as any)
+        .from('equipment')
+        .update({ name: itemName.trim(), total_quantity: itemQty })
+        .eq('id', editItem.id);
+    } else {
+      await (supabase as any).from('equipment').insert({
+        space_id: spaceId,
+        name: itemName.trim(),
+        total_quantity: itemQty,
+      });
+    }
+
+    setSavingItem(false);
+    setShowAddForm(false);
+    setEditItem(null);
+    await loadSpace();
+  }
+
+  async function deleteItem(item: Equipment) {
+    if (item.out > 0) return; // can't delete if items are out
+    setDeletingId(item.id);
+    await (supabase as any).from('equipment').delete().eq('id', item.id);
+    setEquipment(prev => prev.filter(e => e.id !== item.id));
+    setDeletingId(null);
+  }
+
+  // ── Issue / return ──
 
   async function issueLoan() {
     if (!issueItem || !selectedMember) return;
@@ -138,9 +190,8 @@ export function EquipmentPage() {
   async function returnLoan(id: string) {
     setReturning(id);
     await (supabase as any).from('equipment_loans').update({ returned_at: new Date().toISOString() }).eq('id', id);
-    setLoans(prev => prev.filter(l => l.id !== id));
-    // Update out count
     const loan = loans.find(l => l.id === id);
+    setLoans(prev => prev.filter(l => l.id !== id));
     if (loan) {
       setEquipment(prev => prev.map(e =>
         e.id === loan.equipment_id ? { ...e, out: Math.max(0, e.out - loan.quantity) } : e
@@ -162,7 +213,7 @@ export function EquipmentPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-stone-900">Equipment</h1>
-        <p className="text-stone-500 text-sm mt-1">Issue and track equipment loans to members.</p>
+        <p className="text-stone-500 text-sm mt-1">Manage inventory and track loans to members.</p>
       </div>
 
       {/* Space tabs */}
@@ -170,7 +221,7 @@ export function EquipmentPage() {
         {SPACES.map(s => (
           <button
             key={s.slug}
-            onClick={() => setActiveSpace(s.slug)}
+            onClick={() => { setActiveSpace(s.slug); setShowAddForm(false); }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${
               activeSpace === s.slug
                 ? 'bg-orange-600 text-white border-orange-600'
@@ -186,42 +237,116 @@ export function EquipmentPage() {
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 text-orange-600 animate-spin" /></div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Equipment inventory */}
+
+          {/* ── Inventory ── */}
           <div>
-            <h2 className="font-semibold text-stone-900 mb-3">Inventory</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-stone-900">Inventory</h2>
+              <button
+                onClick={openAdd}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-orange-600 text-white px-3 py-1.5 rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Item
+              </button>
+            </div>
+
+            {/* Add / edit form */}
+            {showAddForm && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-3">
+                <p className="text-sm font-semibold text-stone-900 mb-3">
+                  {editItem ? 'Edit Item' : 'New Item'}
+                </p>
+                <div className="space-y-3">
+                  <input
+                    value={itemName}
+                    onChange={e => setItemName(e.target.value)}
+                    placeholder="Item name (e.g. Cricket Bat)"
+                    className="w-full px-3 py-2.5 rounded-lg border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && saveItem()}
+                  />
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-semibold text-stone-500 whitespace-nowrap">Total Qty</label>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setItemQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 font-bold flex items-center justify-center">−</button>
+                      <span className="text-base font-bold text-stone-900 w-6 text-center">{itemQty}</span>
+                      <button onClick={() => setItemQty(q => q + 1)} className="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 font-bold flex items-center justify-center">+</button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveItem}
+                      disabled={savingItem || !itemName.trim()}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 disabled:opacity-40 transition-colors"
+                    >
+                      {savingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      {editItem ? 'Save' : 'Add'}
+                    </button>
+                    <button
+                      onClick={() => { setShowAddForm(false); setEditItem(null); }}
+                      className="px-4 py-2 border border-stone-200 text-stone-600 text-sm font-semibold rounded-lg hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               {equipment.length === 0 ? (
-                <div className="bg-white border border-stone-200 rounded-xl p-6 text-center text-stone-400 text-sm">
-                  No equipment listed for this space.
+                <div className="bg-white border border-dashed border-stone-300 rounded-xl p-8 text-center">
+                  <Package className="w-7 h-7 text-stone-300 mx-auto mb-2" />
+                  <p className="text-stone-400 text-sm">No equipment added yet.</p>
+                  <button onClick={openAdd} className="text-orange-600 text-sm font-semibold mt-1 hover:underline">Add your first item</button>
                 </div>
               ) : equipment.map(item => {
                 const available = item.total_quantity - item.out;
+                const isEditing = editItem?.id === item.id && showAddForm;
                 return (
-                  <div key={item.id} className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex items-center justify-between">
-                    <div>
+                  <div key={item.id} className={`bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between gap-2 ${isEditing ? 'border-orange-400' : 'border-stone-200'}`}>
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-stone-900 text-sm">{item.name}</p>
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <span className={`text-xs font-medium ${available > 0 ? 'text-green-600' : 'text-red-500'}`}>
                           {available} available
                         </span>
                         <span className="text-xs text-stone-400">{item.out} out · {item.total_quantity} total</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => { setIssueItem(item); setIssueQty(1); }}
-                      disabled={available === 0}
-                      className="flex items-center gap-1.5 text-xs font-semibold bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
-                      Issue
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deleteItem(item)}
+                        disabled={deletingId === item.id || item.out > 0}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={item.out > 0 ? 'Cannot delete — items are currently out' : 'Delete'}
+                      >
+                        {deletingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => { setIssueItem(item); setIssueQty(1); }}
+                        disabled={available === 0}
+                        className="flex items-center gap-1 text-xs font-semibold bg-orange-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ml-1"
+                      >
+                        <ArrowLeftRight className="w-3 h-3" />
+                        Issue
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Active loans */}
+          {/* ── Active loans ── */}
           <div>
             <h2 className="font-semibold text-stone-900 mb-3">
               Currently Out
@@ -263,7 +388,7 @@ export function EquipmentPage() {
         </div>
       )}
 
-      {/* Issue modal */}
+      {/* ── Issue modal ── */}
       {issueItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => !issuing && setIssueItem(null)} />
@@ -276,7 +401,6 @@ export function EquipmentPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Member search */}
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Member</label>
                 {selectedMember ? (
@@ -285,8 +409,8 @@ export function EquipmentPage() {
                       <p className="font-medium text-stone-900 text-sm">{selectedMember.full_name}</p>
                       {selectedMember.phone && <p className="text-stone-400 text-xs">{selectedMember.phone}</p>}
                     </div>
-                    <button onClick={() => { setSelectedMember(null); setMemberSearch(''); }} className="text-stone-400 hover:text-stone-600">
-                      <X className="w-4 h-4" />
+                    <button onClick={() => { setSelectedMember(null); setMemberSearch(''); }}>
+                      <X className="w-4 h-4 text-stone-400 hover:text-stone-600" />
                     </button>
                   </div>
                 ) : (
@@ -322,26 +446,18 @@ export function EquipmentPage() {
                 )}
               </div>
 
-              {/* Quantity */}
               {maxIssue > 1 && (
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Quantity</label>
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setIssueQty(q => Math.max(1, q - 1))}
-                      className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center"
-                    >−</button>
+                    <button onClick={() => setIssueQty(q => Math.max(1, q - 1))} className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center">−</button>
                     <span className="text-lg font-bold text-stone-900 w-6 text-center">{issueQty}</span>
-                    <button
-                      onClick={() => setIssueQty(q => Math.min(maxIssue, q + 1))}
-                      className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center"
-                    >+</button>
+                    <button onClick={() => setIssueQty(q => Math.min(maxIssue, q + 1))} className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center">+</button>
                     <span className="text-xs text-stone-400">max {maxIssue}</span>
                   </div>
                 </div>
               )}
 
-              {/* Notes */}
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">
                   Notes <span className="font-normal text-stone-400 normal-case">(optional)</span>
