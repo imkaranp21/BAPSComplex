@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, UserPlus, Shield, ShieldOff, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Shield, ShieldOff, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import { format } from 'date-fns';
@@ -33,6 +33,8 @@ export function MembersPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [addAdminError, setAddAdminError] = useState('');
   const [addAdminLoading, setAddAdminLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { load(); }, []);
@@ -86,6 +88,18 @@ export function MembersPage() {
          (m.phone ?? '').includes(adminSearch))
       ).slice(0, 6)
     : [];
+
+  async function deleteMember() {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+    const { error } = await (supabase as any).rpc('delete_member', { target_user_id: deleteConfirm.id });
+    if (!error) {
+      setMembers(prev => prev.filter(m => m.id !== deleteConfirm.id));
+      setAdminRoles(prev => prev.filter(a => a.user_id !== deleteConfirm.id));
+    }
+    setDeleting(false);
+    setDeleteConfirm(null);
+  }
 
   async function removeAdmin(userId: string) {
     setSaving(userId);
@@ -230,6 +244,7 @@ export function MembersPage() {
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Status</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Role</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Joined</th>
+              <th className="px-4 py-3.5" />
             </tr>
           </thead>
           <tbody>
@@ -326,6 +341,17 @@ export function MembersPage() {
                   <td className="px-4 py-4 text-xs text-stone-400">
                     {format(new Date(member.created_at), 'MMM d, yyyy')}
                   </td>
+                  <td className="px-4 py-4">
+                    {!isSelf && (
+                      <button
+                        onClick={() => setDeleteConfirm(member)}
+                        className="p-1.5 rounded-lg text-stone-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete member"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -338,6 +364,43 @@ export function MembersPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !deleting && setDeleteConfirm(null)} />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <h2 className="text-lg font-bold text-stone-900 text-center mb-2">Delete Member?</h2>
+            <p className="text-stone-500 text-sm text-center mb-1">
+              You are about to permanently delete
+            </p>
+            <p className="font-semibold text-stone-900 text-center mb-4">{deleteConfirm.full_name}</p>
+            <p className="text-xs text-stone-400 text-center mb-6 leading-relaxed">
+              This will remove their account, all bookings, and all records from the database. This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 font-semibold text-sm hover:bg-stone-50 transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteMember}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
