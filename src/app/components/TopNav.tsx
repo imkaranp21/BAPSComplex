@@ -1,5 +1,6 @@
 import { Home, Grid3x3, CalendarCheck, User } from 'lucide-react';
 import type { NavTab } from './BottomNav';
+import { AnnouncementsBell } from './AnnouncementsBell';
 
 interface TopNavProps {
   activeTab: NavTab;
@@ -29,21 +30,25 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
         <span className="text-sm text-stone-400 font-normal hidden lg:block">Nakuru, Kenya</span>
       </div>
 
-      <div className="flex items-center gap-1">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-orange-600 text-white'
-                : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-orange-600 text-white'
+                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="w-px h-6 bg-stone-200 mx-1" />
+        <AnnouncementsBell />
       </div>
     </nav>
   );

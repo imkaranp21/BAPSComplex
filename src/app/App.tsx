@@ -12,6 +12,7 @@ import { BookingModal } from './components/BookingModal';
 import { ActivityFilterModal } from './components/ActivityFilterModal';
 import { BottomNav, type NavTab } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
+import { AnnouncementsBell } from './components/AnnouncementsBell';
 import { useAuth } from '../lib/AuthContext';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
@@ -128,6 +129,14 @@ export default function App() {
 
       {showNav && (
         <TopNav activeTab={activeNavTab} onTabChange={handleNavChange} />
+      )}
+
+      {/* Mobile header — bell + branding, hidden on desktop where TopNav shows it */}
+      {showNav && (
+        <div className="md:hidden flex items-center justify-between px-4 h-12 border-b border-stone-200 bg-white sticky top-0 z-40">
+          <span className="text-base font-bold text-stone-900 tracking-tight">Yogi Sports Complex</span>
+          <AnnouncementsBell />
+        </div>
       )}
 
       <main className={`flex-1 overflow-y-auto ${showNav ? 'pb-20 md:pb-0' : ''}`}>
