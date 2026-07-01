@@ -43,7 +43,7 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
 
   async function cancelBooking(id: string) {
     setCancellingId(id);
-    await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+    await (supabase as any).rpc('cancel_booking', { booking_id: id });
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
     setCancellingId(null);
   }
