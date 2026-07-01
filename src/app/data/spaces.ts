@@ -1,4 +1,11 @@
-export type SpaceId = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
+export type SpaceId = 'gym' | 'cricket' | 'futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
+
+// Spaces that share the same physical area — booking one blocks the others
+export const SPACE_CONFLICTS: Record<string, string[]> = {
+  'cricket':    ['volleyball', 'futsal'],
+  'volleyball': ['cricket'],
+  'futsal':     ['cricket'],
+};
 
 export interface SpaceUnit {
   id: string;
@@ -30,13 +37,22 @@ export const SPACES: Space[] = [
     hasCapacity: true,
   },
   {
-    id: 'cricket-futsal',
-    name: 'Cricket / Futsal',
-    description: 'Multi-use indoor court',
+    id: 'cricket',
+    name: 'Cricket',
+    description: 'Full indoor cricket court',
     available: 1,
     total: 1,
     status: 'open',
-    activities: ['Cricket', 'Futsal'],
+    activities: ['Cricket'],
+  },
+  {
+    id: 'futsal',
+    name: 'Futsal',
+    description: 'Futsal court (shares cricket area)',
+    available: 1,
+    total: 1,
+    status: 'open',
+    activities: ['Futsal'],
   },
   {
     id: 'volleyball',

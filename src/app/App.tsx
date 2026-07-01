@@ -15,7 +15,7 @@ import { TopNav } from './components/TopNav';
 import { useAuth } from '../lib/AuthContext';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
-export type SpaceType = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
+export type SpaceType = 'gym' | 'cricket' | 'futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
   const { user, profile, loading, isRecovery, clearRecovery } = useAuth();

@@ -4,11 +4,12 @@ import { format } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 
 const WALK_IN_SPACES = [
-  { slug: 'cricket-futsal', label: 'Cricket / Futsal' },
-  { slug: 'volleyball',     label: 'Volleyball' },
-  { slug: 'table-tennis',   label: 'Table Tennis' },
-  { slug: 'pool-table',     label: 'Pool Table' },
-  { slug: 'darts',          label: 'Darts' },
+  { slug: 'cricket',      label: 'Cricket' },
+  { slug: 'futsal',       label: 'Futsal' },
+  { slug: 'volleyball',   label: 'Volleyball' },
+  { slug: 'table-tennis', label: 'Table Tennis' },
+  { slug: 'pool-table',   label: 'Pool Table' },
+  { slug: 'darts',        label: 'Darts' },
 ];
 
 interface WalkIn {

@@ -5,7 +5,7 @@ import { format, addDays } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import type { SpaceType } from '../App';
-import { getSpace } from '../data/spaces';
+import { getSpace, SPACE_CONFLICTS } from '../data/spaces';
 
 function formatHour(h: number) {
   if (h === 0) return '12:00 AM';
@@ -100,6 +100,15 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     setSelectedSlot(null);
 
     async function fetchUnavailable() {
+      // Fetch conflicting space IDs for cross-blocking (e.g. cricket ↔ volleyball/futsal)
+      const conflictSlugs = SPACE_CONFLICTS[space] ?? [];
+      const conflictIdMap: Record<string, string> = {};
+      if (conflictSlugs.length > 0) {
+        const { data: conflictSpaces } = await (supabase as any)
+          .from('spaces').select('id, slug').in('slug', conflictSlugs);
+        (conflictSpaces ?? []).forEach((s: any) => { conflictIdMap[s.slug] = s.id; });
+      }
+
       let spaceQuery = supabase
         .from('bookings')
         .select('start_time, end_time')
@@ -125,14 +134,32 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
         .eq('space_id', dbSpaceId!)
         .eq('date', selectedDate);
 
-      const [{ data: spaceData }, { data: myData }, { data: closuresData }] = await Promise.all([
-        spaceQuery, myQuery, closuresQuery,
-      ]);
+      // One query per conflicting space
+      const conflictQueries = Object.values(conflictIdMap).map(cid =>
+        (supabase as any)
+          .from('bookings')
+          .select('start_time, end_time')
+          .eq('date', selectedDate)
+          .eq('status', 'confirmed')
+          .eq('space_id', cid)
+      );
+
+      const [{ data: spaceData }, { data: myData }, { data: closuresData }, ...conflictResults] =
+        await Promise.all([spaceQuery, myQuery, closuresQuery, ...conflictQueries]);
 
       const blocked = new Set<string>();
-      (spaceData ?? []).forEach(b => {
+      // Direct bookings on this space
+      (spaceData ?? []).forEach((b: any) => {
         TIME_SLOTS.forEach(slot => {
           if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
+        });
+      });
+      // Bookings on conflicting spaces
+      conflictResults.forEach(res => {
+        (res.data ?? []).forEach((b: any) => {
+          TIME_SLOTS.forEach(slot => {
+            if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
+          });
         });
       });
       setUnavailableSlots(blocked);
@@ -159,7 +186,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     }
 
     fetchUnavailable();
-  }, [selectedDate, selectedUnitId, dbSpaceId]);
+  }, [selectedDate, selectedUnitId, dbSpaceId, space]);
 
   async function handleConfirm() {
     if (!selectedDate || !selectedSlot || !user || !dbSpaceId) return;
