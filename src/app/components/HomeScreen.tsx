@@ -32,20 +32,14 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
 
   async function fetchLiveData() {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const timeStr = now.toTimeString().slice(0, 8);
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:00`;
 
     const [gymRes, spacesRes, walkInsRes, bookingsRes] = await Promise.all([
       (supabase as any).from('gym_checkins').select('id', { count: 'exact' }).eq('is_active', true),
       (supabase as any).from('spaces').select('id, slug'),
       (supabase as any).from('walk_ins').select('space_id').eq('is_active', true),
-      (supabase as any)
-        .from('bookings')
-        .select('space_id')
-        .eq('date', todayStr)
-        .eq('status', 'confirmed')
-        .lte('start_time', timeStr)
-        .gt('end_time', timeStr),
+      (supabase as any).rpc('get_space_availability', { check_date: todayStr, check_time: timeStr }),
     ]);
 
     setGymCount(gymRes.count ?? 0);
@@ -59,7 +53,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
       counts[w.space_id] = (counts[w.space_id] ?? 0) + 1;
     }
     for (const b of (bookingsRes.data ?? [])) {
-      counts[b.space_id] = (counts[b.space_id] ?? 0) + 1;
+      counts[b.space_id] = (counts[b.space_id] ?? 0) + Number(b.booked_units);
     }
     setOccupiedUnits(counts);
 
