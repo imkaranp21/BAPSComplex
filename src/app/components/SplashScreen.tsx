@@ -2,11 +2,9 @@ import { motion } from 'motion/react';
 
 interface SplashScreenProps {
   onGetStarted: () => void;
-  onSignIn: () => void;
-  onSignUp: () => void;
 }
 
-export function SplashScreen({ onGetStarted, onSignIn, onSignUp }: SplashScreenProps) {
+export function SplashScreen({ onGetStarted }: SplashScreenProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -38,25 +36,13 @@ export function SplashScreen({ onGetStarted, onSignIn, onSignUp }: SplashScreenP
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="w-full max-w-sm space-y-3"
+        className="w-full max-w-sm"
       >
         <button
-          onClick={onSignIn}
+          onClick={onGetStarted}
           className="w-full bg-white text-orange-600 font-semibold py-4 px-8 rounded-2xl hover:bg-orange-50 transition-colors shadow-md"
         >
-          Sign In
-        </button>
-        <button
-          onClick={onSignUp}
-          className="w-full bg-orange-500 text-white font-semibold py-4 px-8 rounded-2xl hover:bg-orange-400 transition-colors border border-orange-400"
-        >
-          Create Account
-        </button>
-        <button
-          onClick={onGetStarted}
-          className="w-full text-orange-200 font-medium py-3 px-8 rounded-2xl hover:text-white transition-colors text-sm"
-        >
-          Browse without signing in
+          Get Started
         </button>
       </motion.div>
 
