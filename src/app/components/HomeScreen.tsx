@@ -23,7 +23,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activeFilter, onClearFilter }: HomeScreenProps) {
   const [gymCount, setGymCount] = useState<number | null>(null);
-  const [walkInCounts, setWalkInCounts] = useState<Record<string, number>>({});
+  const [occupiedUnits, setOccupiedUnits] = useState<Record<string, number>>({});
   const [spaceIds, setSpaceIds] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -31,10 +31,21 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
   useEffect(() => { fetchLiveData(); }, []);
 
   async function fetchLiveData() {
-    const [gymRes, spacesRes, walkInsRes] = await Promise.all([
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const timeStr = now.toTimeString().slice(0, 8);
+
+    const [gymRes, spacesRes, walkInsRes, bookingsRes] = await Promise.all([
       (supabase as any).from('gym_checkins').select('id', { count: 'exact' }).eq('is_active', true),
       (supabase as any).from('spaces').select('id, slug'),
-      (supabase as any).from('walk_ins').select('id, space_id').eq('is_active', true),
+      (supabase as any).from('walk_ins').select('space_id').eq('is_active', true),
+      (supabase as any)
+        .from('bookings')
+        .select('space_id')
+        .eq('date', todayStr)
+        .eq('status', 'confirmed')
+        .lte('start_time', timeStr)
+        .gt('end_time', timeStr),
     ]);
 
     setGymCount(gymRes.count ?? 0);
@@ -47,7 +58,10 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
     for (const w of (walkInsRes.data ?? [])) {
       counts[w.space_id] = (counts[w.space_id] ?? 0) + 1;
     }
-    setWalkInCounts(counts);
+    for (const b of (bookingsRes.data ?? [])) {
+      counts[b.space_id] = (counts[b.space_id] ?? 0) + 1;
+    }
+    setOccupiedUnits(counts);
 
     setLastUpdated(new Date());
     setLoading(false);
@@ -69,7 +83,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
     const dbId = spaceIds[spaceId];
     const space = SPACES.find(s => s.id === spaceId);
     const total = space?.total ?? 1;
-    const inUse = dbId ? (walkInCounts[dbId] ?? 0) : 0;
+    const inUse = dbId ? (occupiedUnits[dbId] ?? 0) : 0;
     const available = Math.max(0, total - inUse);
     return { available, total, status: available === 0 ? 'full' : 'open' };
   }
