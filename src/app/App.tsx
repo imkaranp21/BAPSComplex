@@ -5,6 +5,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { AllSpacesScreen } from './components/AllSpacesScreen';
 import { SpaceDetailScreen } from './components/SpaceDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { BookingsScreen } from './components/BookingsScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { ResetPasswordScreen } from './components/ResetPasswordScreen';
 import { BookingModal } from './components/BookingModal';
@@ -13,7 +14,7 @@ import { BottomNav, type NavTab } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { useAuth } from '../lib/AuthContext';
 
-export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'auth';
+export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
 export type SpaceType = 'gym' | 'cricket-futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
@@ -90,11 +91,10 @@ export default function App() {
       setCurrentScreen('all-spaces');
     } else if (tab === 'bookings') {
       if (!user) {
-        setAuthReturnScreen('home');
+        setAuthReturnScreen('bookings');
         setCurrentScreen('auth');
       } else {
-        setCurrentScreen('profile');
-        setActiveNavTab('bookings');
+        setCurrentScreen('bookings');
       }
     } else if (tab === 'profile') {
       setCurrentScreen('profile');
@@ -108,8 +108,16 @@ export default function App() {
   };
 
   const handleAuthSuccess = () => {
-    setCurrentScreen(authReturnScreen === 'space-detail' && selectedSpace ? 'space-detail' : 'home');
-    setActiveNavTab('home');
+    if (authReturnScreen === 'space-detail' && selectedSpace) {
+      setCurrentScreen('space-detail');
+      setActiveNavTab('spaces');
+    } else if (authReturnScreen === 'bookings') {
+      setCurrentScreen('bookings');
+      setActiveNavTab('bookings');
+    } else {
+      setCurrentScreen('home');
+      setActiveNavTab('home');
+    }
   };
 
   const showNav = currentScreen !== 'splash' && currentScreen !== 'auth';
@@ -160,6 +168,14 @@ export default function App() {
                 space={selectedSpace}
                 onBack={handleBack}
                 onBookClick={handleBookClick}
+              />
+            )}
+            {currentScreen === 'bookings' && (
+              <BookingsScreen
+                onSignIn={() => {
+                  setAuthReturnScreen('bookings');
+                  setCurrentScreen('auth');
+                }}
               />
             )}
             {currentScreen === 'profile' && (
@@ -213,7 +229,7 @@ export default function App() {
           onClose={() => setShowBookingModal(false)}
           onBooked={() => {
             setShowBookingModal(false);
-            setCurrentScreen('profile');
+            setCurrentScreen('bookings');
             setActiveNavTab('bookings');
           }}
         />
