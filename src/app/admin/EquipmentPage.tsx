@@ -13,7 +13,7 @@ const SPACES = [
   { slug: 'darts',        label: 'Darts' },
 ];
 
-interface Equipment {
+interface EquipmentItem {
   id: string;
   name: string;
   total_quantity: number;
@@ -24,7 +24,7 @@ interface Loan {
   id: string;
   equipment_id: string;
   equipment_name: string;
-  member_id: string;
+  member_id: string | null;
   member_name: string;
   quantity: number;
   lent_at: string;
@@ -41,33 +41,42 @@ export function EquipmentPage() {
   const { user } = useAuth();
   const [activeSpace, setActiveSpace] = useState(SPACES[0].slug);
   const [spaceIds, setSpaceIds] = useState<Record<string, string>>({});
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [spaceLoading, setSpaceLoading] = useState(false);
 
-  // Add / edit item state
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editItem, setEditItem] = useState<Equipment | null>(null);
+  // Add / edit modal
+  const [itemModal, setItemModal] = useState<{ mode: 'add' | 'edit'; item?: EquipmentItem } | null>(null);
   const [itemName, setItemName] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [savingItem, setSavingItem] = useState(false);
+  const [itemError, setItemError] = useState('');
+
+  // Delete
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Issue modal state
-  const [issueItem, setIssueItem] = useState<Equipment | null>(null);
+  // Issue modal
+  const [issueItem, setIssueItem] = useState<EquipmentItem | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [issueQty, setIssueQty] = useState(1);
   const [issueNotes, setIssueNotes] = useState('');
   const [issuing, setIssuing] = useState(false);
+  const [issueError, setIssueError] = useState('');
+
+  // Return
   const [returning, setReturning] = useState<string | null>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => { loadAll(); }, []);
-  useEffect(() => { if (Object.keys(spaceIds).length) loadSpace(); }, [activeSpace, spaceIds]);
+  useEffect(() => { init(); }, []);
 
-  async function loadAll() {
+  useEffect(() => {
+    if (Object.keys(spaceIds).length) loadSpace(activeSpace);
+  }, [activeSpace, spaceIds]);
+
+  async function init() {
     setLoading(true);
     const [spacesRes, membersRes] = await Promise.all([
       (supabase as any).from('spaces').select('id, slug').in('slug', SPACES.map(s => s.slug)),
@@ -80,111 +89,145 @@ export function EquipmentPage() {
     setLoading(false);
   }
 
-  async function loadSpace() {
-    const spaceId = spaceIds[activeSpace];
+  async function loadSpace(slug: string) {
+    const spaceId = spaceIds[slug];
     if (!spaceId) return;
+    setSpaceLoading(true);
 
-    const [eqRes, loansRes] = await Promise.all([
-      (supabase as any).from('equipment').select('id, name, total_quantity').eq('space_id', spaceId).order('name'),
-      (supabase as any)
+    // 1. Fetch equipment for this space
+    const { data: eqData } = await (supabase as any)
+      .from('equipment')
+      .select('id, name, total_quantity')
+      .eq('space_id', spaceId)
+      .order('name');
+
+    const eqList: { id: string; name: string; total_quantity: number }[] = eqData ?? [];
+    const eqIds = eqList.map(e => e.id);
+    const eqNameMap: Record<string, string> = {};
+    eqList.forEach(e => { eqNameMap[e.id] = e.name; });
+
+    // 2. Fetch active loans for those equipment items (no join to profiles — we resolve names from members state)
+    let rawLoans: any[] = [];
+    if (eqIds.length > 0) {
+      const { data: loansData } = await (supabase as any)
         .from('equipment_loans')
-        .select('id, equipment_id, quantity, lent_at, notes, member_id, profiles(full_name), equipment(name, space_id)')
-        .is('returned_at', null),
-    ]);
+        .select('id, equipment_id, member_id, quantity, lent_at, notes')
+        .in('equipment_id', eqIds)
+        .is('returned_at', null)
+        .order('lent_at', { ascending: false });
+      rawLoans = loansData ?? [];
+    }
 
-    const rawLoans = (loansRes.data ?? []).filter((l: any) => l.equipment?.space_id === spaceId);
-
+    // Count out per equipment item
     const outCounts: Record<string, number> = {};
     rawLoans.forEach((l: any) => {
-      if (l.equipment_id) outCounts[l.equipment_id] = (outCounts[l.equipment_id] ?? 0) + l.quantity;
+      outCounts[l.equipment_id] = (outCounts[l.equipment_id] ?? 0) + l.quantity;
     });
 
-    setEquipment((eqRes.data ?? []).map((e: any) => ({
+    setEquipment(eqList.map(e => ({
       id: e.id,
       name: e.name,
       total_quantity: e.total_quantity,
       out: outCounts[e.id] ?? 0,
     })));
 
-    setLoans(rawLoans.filter((l: any) => l.equipment?.name).map((l: any) => ({
+    setLoans(rawLoans.map((l: any) => ({
       id: l.id,
       equipment_id: l.equipment_id,
-      equipment_name: l.equipment?.name ?? '',
+      equipment_name: eqNameMap[l.equipment_id] ?? 'Unknown item',
       member_id: l.member_id,
-      member_name: l.profiles?.full_name ?? 'Unknown',
+      member_name: members.find(m => m.id === l.member_id)?.full_name ?? 'Unknown member',
       quantity: l.quantity,
       lent_at: l.lent_at,
       notes: l.notes,
     })));
+
+    setSpaceLoading(false);
   }
 
-  // ── Inventory management ──
+  // ── Inventory CRUD ──
 
   function openAdd() {
-    setEditItem(null);
     setItemName('');
     setItemQty(1);
-    setShowAddForm(true);
+    setItemError('');
+    setItemModal({ mode: 'add' });
   }
 
-  function openEdit(item: Equipment) {
-    setEditItem(item);
+  function openEdit(item: EquipmentItem) {
     setItemName(item.name);
     setItemQty(item.total_quantity);
-    setShowAddForm(true);
+    setItemError('');
+    setItemModal({ mode: 'edit', item });
   }
 
   async function saveItem() {
-    if (!itemName.trim() || itemQty < 1) return;
+    if (!itemName.trim()) { setItemError('Please enter an item name.'); return; }
+    if (itemQty < 1) { setItemError('Quantity must be at least 1.'); return; }
     setSavingItem(true);
-    const spaceId = spaceIds[activeSpace];
+    setItemError('');
 
-    if (editItem) {
-      await (supabase as any)
+    if (itemModal?.mode === 'edit' && itemModal.item) {
+      const { error } = await (supabase as any)
         .from('equipment')
         .update({ name: itemName.trim(), total_quantity: itemQty })
-        .eq('id', editItem.id);
+        .eq('id', itemModal.item.id);
+      if (error) { setItemError(error.message); setSavingItem(false); return; }
     } else {
-      await (supabase as any).from('equipment').insert({
+      const spaceId = spaceIds[activeSpace];
+      const { error } = await (supabase as any).from('equipment').insert({
         space_id: spaceId,
         name: itemName.trim(),
         total_quantity: itemQty,
       });
+      if (error) { setItemError(error.message); setSavingItem(false); return; }
     }
 
     setSavingItem(false);
-    setShowAddForm(false);
-    setEditItem(null);
-    await loadSpace();
+    setItemModal(null);
+    await loadSpace(activeSpace);
   }
 
-  async function deleteItem(item: Equipment) {
-    if (item.out > 0) return; // can't delete if items are out
+  async function deleteItem(item: EquipmentItem) {
     setDeletingId(item.id);
     await (supabase as any).from('equipment').delete().eq('id', item.id);
     setEquipment(prev => prev.filter(e => e.id !== item.id));
     setDeletingId(null);
   }
 
-  // ── Issue / return ──
+  // ── Issue ──
+
+  function openIssue(item: EquipmentItem) {
+    setIssueItem(item);
+    setSelectedMember(null);
+    setMemberSearch('');
+    setIssueQty(1);
+    setIssueNotes('');
+    setIssueError('');
+  }
 
   async function issueLoan() {
     if (!issueItem || !selectedMember) return;
     setIssuing(true);
-    await (supabase as any).from('equipment_loans').insert({
+    setIssueError('');
+
+    const { error } = await (supabase as any).from('equipment_loans').insert({
       equipment_id: issueItem.id,
       member_id: selectedMember.id,
       quantity: issueQty,
       notes: issueNotes.trim() || null,
       lent_by: user!.id,
     });
+
+    if (error) {
+      setIssueError(error.message);
+      setIssuing(false);
+      return;
+    }
+
     setIssueItem(null);
-    setSelectedMember(null);
-    setMemberSearch('');
-    setIssueQty(1);
-    setIssueNotes('');
     setIssuing(false);
-    await loadSpace();
+    await loadSpace(activeSpace);
   }
 
   async function returnLoan(id: string) {
@@ -221,7 +264,7 @@ export function EquipmentPage() {
         {SPACES.map(s => (
           <button
             key={s.slug}
-            onClick={() => { setActiveSpace(s.slug); setShowAddForm(false); }}
+            onClick={() => setActiveSpace(s.slug)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${
               activeSpace === s.slug
                 ? 'bg-orange-600 text-white border-orange-600'
@@ -238,7 +281,7 @@ export function EquipmentPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* ── Inventory ── */}
+          {/* Inventory */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold text-stone-900">Inventory</h2>
@@ -251,102 +294,67 @@ export function EquipmentPage() {
               </button>
             </div>
 
-            {/* Add / edit form */}
-            {showAddForm && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-3">
-                <p className="text-sm font-semibold text-stone-900 mb-3">
-                  {editItem ? 'Edit Item' : 'New Item'}
-                </p>
-                <div className="space-y-3">
-                  <input
-                    value={itemName}
-                    onChange={e => setItemName(e.target.value)}
-                    placeholder="Item name (e.g. Cricket Bat)"
-                    className="w-full px-3 py-2.5 rounded-lg border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    autoFocus
-                    onKeyDown={e => e.key === 'Enter' && saveItem()}
-                  />
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs font-semibold text-stone-500 whitespace-nowrap">Total Qty</label>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setItemQty(q => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 font-bold flex items-center justify-center">−</button>
-                      <span className="text-base font-bold text-stone-900 w-6 text-center">{itemQty}</span>
-                      <button onClick={() => setItemQty(q => q + 1)} className="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 font-bold flex items-center justify-center">+</button>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={saveItem}
-                      disabled={savingItem || !itemName.trim()}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 disabled:opacity-40 transition-colors"
-                    >
-                      {savingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                      {editItem ? 'Save' : 'Add'}
-                    </button>
-                    <button
-                      onClick={() => { setShowAddForm(false); setEditItem(null); }}
-                      className="px-4 py-2 border border-stone-200 text-stone-600 text-sm font-semibold rounded-lg hover:bg-stone-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+            {spaceLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-orange-600 animate-spin" /></div>
+            ) : equipment.length === 0 ? (
+              <div className="bg-white border border-dashed border-stone-300 rounded-xl p-8 text-center">
+                <Package className="w-7 h-7 text-stone-300 mx-auto mb-2" />
+                <p className="text-stone-400 text-sm">No equipment added yet.</p>
+                <button onClick={openAdd} className="text-orange-600 text-sm font-semibold mt-1 hover:underline">
+                  Add your first item
+                </button>
               </div>
-            )}
-
-            <div className="space-y-2">
-              {equipment.length === 0 ? (
-                <div className="bg-white border border-dashed border-stone-300 rounded-xl p-8 text-center">
-                  <Package className="w-7 h-7 text-stone-300 mx-auto mb-2" />
-                  <p className="text-stone-400 text-sm">No equipment added yet.</p>
-                  <button onClick={openAdd} className="text-orange-600 text-sm font-semibold mt-1 hover:underline">Add your first item</button>
-                </div>
-              ) : equipment.map(item => {
-                const available = item.total_quantity - item.out;
-                const isEditing = editItem?.id === item.id && showAddForm;
-                return (
-                  <div key={item.id} className={`bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between gap-2 ${isEditing ? 'border-orange-400' : 'border-stone-200'}`}>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-stone-900 text-sm">{item.name}</p>
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        <span className={`text-xs font-medium ${available > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                          {available} available
-                        </span>
-                        <span className="text-xs text-stone-400">{item.out} out · {item.total_quantity} total</span>
+            ) : (
+              <div className="space-y-2">
+                {equipment.map(item => {
+                  const available = item.total_quantity - item.out;
+                  return (
+                    <div key={item.id} className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-stone-900 text-sm">{item.name}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className={`text-xs font-medium ${available > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {available} available
+                          </span>
+                          <span className="text-xs text-stone-400">{item.out} out · {item.total_quantity} total</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => openEdit(item)}
+                          className="p-1.5 rounded-lg text-stone-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteItem(item)}
+                          disabled={deletingId === item.id || item.out > 0}
+                          className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={item.out > 0 ? 'Cannot delete — items currently out' : 'Delete'}
+                        >
+                          {deletingId === item.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Trash2 className="w-3.5 h-3.5" />
+                          }
+                        </button>
+                        <button
+                          onClick={() => openIssue(item)}
+                          disabled={available === 0}
+                          className="ml-1 flex items-center gap-1 text-xs font-semibold bg-orange-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <ArrowLeftRight className="w-3 h-3" />
+                          Issue
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="p-1.5 rounded-lg text-stone-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(item)}
-                        disabled={deletingId === item.id || item.out > 0}
-                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        title={item.out > 0 ? 'Cannot delete — items are currently out' : 'Delete'}
-                      >
-                        {deletingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                      </button>
-                      <button
-                        onClick={() => { setIssueItem(item); setIssueQty(1); }}
-                        disabled={available === 0}
-                        className="flex items-center gap-1 text-xs font-semibold bg-orange-600 text-white px-2.5 py-1.5 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ml-1"
-                      >
-                        <ArrowLeftRight className="w-3 h-3" />
-                        Issue
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* ── Active loans ── */}
+          {/* Active loans */}
           <div>
             <h2 className="font-semibold text-stone-900 mb-3">
               Currently Out
@@ -388,19 +396,79 @@ export function EquipmentPage() {
         </div>
       )}
 
+      {/* ── Add / Edit item modal ── */}
+      {itemModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !savingItem && setItemModal(null)} />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-bold text-stone-900">{itemModal.mode === 'add' ? 'Add Equipment Item' : 'Edit Item'}</h2>
+              <button onClick={() => setItemModal(null)} className="p-1 hover:bg-stone-100 rounded-lg">
+                <X className="w-5 h-5 text-stone-500" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Item Name</label>
+                <input
+                  value={itemName}
+                  onChange={e => setItemName(e.target.value)}
+                  placeholder="e.g. Cricket Bat"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  autoFocus
+                  onKeyDown={e => e.key === 'Enter' && saveItem()}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-2">Total Quantity</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setItemQty(q => Math.max(itemModal.item ? itemModal.item.out : 1, q - 1))}
+                    className="w-10 h-10 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-xl flex items-center justify-center"
+                  >−</button>
+                  <span className="text-2xl font-bold text-stone-900 w-10 text-center">{itemQty}</span>
+                  <button
+                    onClick={() => setItemQty(q => q + 1)}
+                    className="w-10 h-10 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-xl flex items-center justify-center"
+                  >+</button>
+                  {itemModal.mode === 'edit' && itemModal.item && itemModal.item.out > 0 && (
+                    <span className="text-xs text-stone-400">min {itemModal.item.out} (in use)</span>
+                  )}
+                </div>
+              </div>
+              {itemError && (
+                <p className="text-red-600 text-sm bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{itemError}</p>
+              )}
+              <button
+                onClick={saveItem}
+                disabled={savingItem}
+                className="w-full flex items-center justify-center gap-2 bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-40"
+              >
+                {savingItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                {savingItem ? 'Saving…' : itemModal.mode === 'add' ? 'Add to Inventory' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Issue modal ── */}
       {issueItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => !issuing && setIssueItem(null)} />
           <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-bold text-stone-900">Issue {issueItem.name}</h2>
+              <div>
+                <h2 className="font-bold text-stone-900">Issue Equipment</h2>
+                <p className="text-stone-400 text-sm mt-0.5">{issueItem.name}</p>
+              </div>
               <button onClick={() => setIssueItem(null)} className="p-1 hover:bg-stone-100 rounded-lg">
                 <X className="w-5 h-5 text-stone-500" />
               </button>
             </div>
 
             <div className="space-y-4">
+              {/* Member search */}
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Member</label>
                 {selectedMember ? (
@@ -442,22 +510,34 @@ export function EquipmentPage() {
                         ))}
                       </div>
                     )}
+                    {showDropdown && memberSearch.trim() && memberResults.length === 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-10 px-4 py-3 text-sm text-stone-400">
+                        No members found.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {maxIssue > 1 && (
-                <div>
-                  <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Quantity</label>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setIssueQty(q => Math.max(1, q - 1))} className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center">−</button>
-                    <span className="text-lg font-bold text-stone-900 w-6 text-center">{issueQty}</span>
-                    <button onClick={() => setIssueQty(q => Math.min(maxIssue, q + 1))} className="w-9 h-9 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center">+</button>
-                    <span className="text-xs text-stone-400">max {maxIssue}</span>
-                  </div>
+              {/* Quantity */}
+              <div>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-2">Quantity</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIssueQty(q => Math.max(1, q - 1))}
+                    className="w-10 h-10 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-xl flex items-center justify-center"
+                  >−</button>
+                  <span className="text-2xl font-bold text-stone-900 w-10 text-center">{issueQty}</span>
+                  <button
+                    onClick={() => setIssueQty(q => Math.min(maxIssue, q + 1))}
+                    disabled={issueQty >= maxIssue}
+                    className="w-10 h-10 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100 font-bold text-xl flex items-center justify-center disabled:opacity-30"
+                  >+</button>
+                  <span className="text-xs text-stone-400">{maxIssue} available</span>
                 </div>
-              )}
+              </div>
 
+              {/* Notes */}
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">
                   Notes <span className="font-normal text-stone-400 normal-case">(optional)</span>
@@ -470,13 +550,17 @@ export function EquipmentPage() {
                 />
               </div>
 
+              {issueError && (
+                <p className="text-red-600 text-sm bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{issueError}</p>
+              )}
+
               <button
                 onClick={issueLoan}
                 disabled={!selectedMember || issuing}
                 className="w-full flex items-center justify-center gap-2 bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-40"
               >
                 {issuing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowLeftRight className="w-4 h-4" />}
-                {issuing ? 'Issuing…' : `Issue to ${selectedMember?.full_name ?? 'Member'}`}
+                {issuing ? 'Issuing…' : selectedMember ? `Issue to ${selectedMember.full_name}` : 'Select a member first'}
               </button>
             </div>
           </div>
