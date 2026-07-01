@@ -215,13 +215,27 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowPendingNotice(false)} />
           <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
-            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-amber-600 text-xl font-bold">!</span>
-            </div>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">Membership Pending</h2>
-            <p className="text-stone-500 text-sm mb-5">
-              Your account is awaiting approval from an admin. Once your membership is activated, you'll be able to book spaces.
-            </p>
+            {profile?.membership_status === 'suspended' ? (
+              <>
+                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-red-600 text-xl font-bold">!</span>
+                </div>
+                <h2 className="text-lg font-bold text-stone-900 mb-2">Account Suspended</h2>
+                <p className="text-stone-500 text-sm mb-5">
+                  Your membership has been suspended. Please contact the complex for more information.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-amber-600 text-xl font-bold">!</span>
+                </div>
+                <h2 className="text-lg font-bold text-stone-900 mb-2">Membership Pending</h2>
+                <p className="text-stone-500 text-sm mb-5">
+                  Your account is awaiting approval from an admin. Once your membership is activated, you'll be able to book spaces.
+                </p>
+              </>
+            )}
             <button
               onClick={() => setShowPendingNotice(false)}
               className="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors"

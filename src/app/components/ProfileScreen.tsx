@@ -86,6 +86,13 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
             </p>
           </div>
         )}
+        {profile?.membership_status === 'suspended' && (
+          <div className="mt-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            <p className="text-sm text-red-800">
+              Your account has been suspended. Please contact the complex for more information.
+            </p>
+          </div>
+        )}
       </motion.div>
     </div>
   );
