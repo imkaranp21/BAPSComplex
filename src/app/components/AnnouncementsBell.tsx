@@ -115,7 +115,7 @@ export function AnnouncementsBell() {
                             {format(parseISO(a.created_at), 'MMM d, yyyy')}
                             {a.expires_at && (
                               <span className="ml-2 text-orange-400">
-                                · Until {format(parseISO(a.expires_at), 'MMM d')}
+                                · Until {format(parseISO(a.expires_at), 'MMM d, h:mm a')}
                               </span>
                             )}
                           </p>

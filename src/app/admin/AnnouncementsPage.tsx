@@ -58,7 +58,7 @@ export function AnnouncementsPage() {
     setDeletingId(null);
   }
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const nowLocal = format(new Date(), "yyyy-MM-dd'T'HH:mm");
 
   return (
     <div>
@@ -99,12 +99,12 @@ export function AnnouncementsPage() {
 
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">
-                Expiry Date <span className="font-normal normal-case text-stone-400">(optional — hides automatically after this date)</span>
+                Expires At <span className="font-normal normal-case text-stone-400">(optional — hides automatically after this date & time)</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={expiresAt}
-                min={today}
+                min={nowLocal}
                 onChange={e => setExpiresAt(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
@@ -153,7 +153,7 @@ export function AnnouncementsPage() {
                       <p className="text-stone-600 text-sm leading-relaxed">{a.body}</p>
                       <p className="text-stone-400 text-xs mt-2">
                         Posted {format(parseISO(a.created_at), 'MMM d, yyyy')}
-                        {a.expires_at && ` · Expires ${format(parseISO(a.expires_at), 'MMM d, yyyy')}`}
+                        {a.expires_at && ` · Expires ${format(parseISO(a.expires_at), 'MMM d, yyyy · h:mm a')}`}
                       </p>
                     </div>
                     <button
