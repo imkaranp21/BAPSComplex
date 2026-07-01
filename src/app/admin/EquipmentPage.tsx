@@ -35,6 +35,7 @@ interface Member {
   id: string;
   full_name: string;
   phone: string | null;
+  membership_status: string;
 }
 
 export function EquipmentPage() {
@@ -80,7 +81,7 @@ export function EquipmentPage() {
     setLoading(true);
     const [spacesRes, membersRes] = await Promise.all([
       (supabase as any).from('spaces').select('id, slug').in('slug', SPACES.map(s => s.slug)),
-      (supabase as any).from('profiles').select('id, full_name, phone').order('full_name'),
+      (supabase as any).from('profiles').select('id, full_name, phone, membership_status').order('full_name'),
     ]);
     const ids: Record<string, string> = {};
     (spacesRes.data ?? []).forEach((s: any) => { ids[s.slug] = s.id; });
@@ -245,8 +246,9 @@ export function EquipmentPage() {
 
   const memberResults = memberSearch.trim()
     ? members.filter(m =>
-        m.full_name.toLowerCase().includes(memberSearch.toLowerCase()) ||
-        (m.phone ?? '').includes(memberSearch)
+        m.membership_status === 'active' &&
+        (m.full_name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+         (m.phone ?? '').includes(memberSearch))
       ).slice(0, 6)
     : [];
 
