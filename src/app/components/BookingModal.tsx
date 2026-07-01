@@ -53,6 +53,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
   const [dbSpaceId, setDbSpaceId] = useState<string | null>(null);
   const [dbUnits, setDbUnits] = useState<DbUnit[]>([]);
   const [unavailableSlots, setUnavailableSlots] = useState<Set<string>>(new Set());
+  const [myBookedSlots, setMyBookedSlots] = useState<Set<string>>(new Set());
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -98,28 +99,43 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     setSelectedSlot(null);
 
     async function fetchUnavailable() {
-      let query = supabase
+      let spaceQuery = supabase
         .from('bookings')
         .select('start_time, end_time')
         .eq('date', selectedDate)
         .eq('status', 'confirmed');
 
       if (selectedUnitId) {
-        query = query.eq('space_unit_id', selectedUnitId);
+        spaceQuery = spaceQuery.eq('space_unit_id', selectedUnitId);
       } else {
-        query = query.eq('space_id', dbSpaceId!);
+        spaceQuery = spaceQuery.eq('space_id', dbSpaceId!);
       }
 
-      const { data } = await query;
+      const myQuery = supabase
+        .from('bookings')
+        .select('start_time, end_time')
+        .eq('date', selectedDate)
+        .eq('status', 'confirmed')
+        .eq('user_id', user!.id);
+
+      const [{ data: spaceData }, { data: myData }] = await Promise.all([spaceQuery, myQuery]);
+
       const blocked = new Set<string>();
-      (data ?? []).forEach(b => {
+      (spaceData ?? []).forEach(b => {
         TIME_SLOTS.forEach(slot => {
-          if (slot.start < b.end_time && slot.end > b.start_time) {
-            blocked.add(slot.start);
-          }
+          if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
         });
       });
       setUnavailableSlots(blocked);
+
+      const mine = new Set<string>();
+      (myData ?? []).forEach(b => {
+        TIME_SLOTS.forEach(slot => {
+          if (slot.start < b.end_time && slot.end > b.start_time) mine.add(slot.start);
+        });
+      });
+      setMyBookedSlots(mine);
+
       setLoadingSlots(false);
     }
 
@@ -143,7 +159,9 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
 
     if (err) {
       setError(
-        err.message.includes('conflict') || err.message.includes('already taken')
+        err.message.includes('already have a booking')
+          ? 'You already have a booking during this time slot.'
+          : err.message.includes('conflict') || err.message.includes('already taken')
           ? 'That slot was just taken — please choose another time.'
           : 'Booking failed. Please try again.'
       );
@@ -263,15 +281,20 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {TIME_SLOTS.map(slot => {
-                      const taken = unavailableSlots.has(slot.start);
+                      const mine = myBookedSlots.has(slot.start);
+                      const taken = !mine && unavailableSlots.has(slot.start);
+                      const blocked = mine || taken;
                       const selected = selectedSlot?.start === slot.start;
                       return (
                         <button
                           key={slot.start}
-                          onClick={() => !taken && setSelectedSlot(slot)}
-                          disabled={taken || loadingSlots}
+                          onClick={() => !blocked && setSelectedSlot(slot)}
+                          disabled={blocked || loadingSlots}
+                          title={mine ? 'You already have a booking at this time' : undefined}
                           className={`py-2.5 px-1 rounded-xl border-2 text-xs font-medium transition-colors ${
-                            taken
+                            mine
+                              ? 'border-orange-200 bg-orange-50 text-orange-300 cursor-not-allowed'
+                              : taken
                               ? 'border-stone-100 bg-stone-50 text-stone-300 cursor-not-allowed line-through'
                               : selected
                               ? 'border-orange-600 bg-orange-600 text-white'
@@ -283,7 +306,16 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-stone-400 mt-2">Strikethrough = already booked</p>
+                  <div className="flex gap-4 mt-2">
+                    <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                      <span className="w-3 h-3 rounded bg-stone-100 border border-stone-200 inline-block" />
+                      Taken
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-orange-400">
+                      <span className="w-3 h-3 rounded bg-orange-50 border border-orange-200 inline-block" />
+                      Your booking
+                    </span>
+                  </div>
                 </div>
               )}
 
