@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, UserPlus, Check, X, Shield, ShieldOff, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, UserPlus, Shield, ShieldOff, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import { format } from 'date-fns';
@@ -28,9 +28,12 @@ export function MembersPage() {
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('');
+  const [adminSearch, setAdminSearch] = useState('');
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [addAdminError, setAddAdminError] = useState('');
   const [addAdminLoading, setAddAdminLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -54,39 +57,35 @@ export function MembersPage() {
     setSaving(null);
   }
 
-  async function addAdmin(email: string) {
+  async function addAdmin() {
+    if (!selectedMember) return;
     setAddAdminLoading(true);
     setAddAdminError('');
 
-    // Find member by email — requires a server-side lookup
-    // We query via auth.users through the service role (needs admin privileges)
-    const { data: profile, error } = await (supabase as any)
-      .from('profiles')
-      .select('id, full_name')
-      .ilike('full_name', `%${email}%`)
-      .limit(5);
-
-    if (error || !profile?.length) {
-      setAddAdminError('No member found with that name. Search by full name.');
-      setAddAdminLoading(false);
-      return;
-    }
-
-    // Use first match for now — a proper lookup would use email
-    const target = profile[0];
     const { error: insertErr } = await (supabase as any)
       .from('admin_roles')
-      .insert({ user_id: target.id, role: 'admin', created_by: currentUser?.id });
+      .insert({ user_id: selectedMember.id, role: 'admin', created_by: currentUser?.id });
 
     if (insertErr) {
-      setAddAdminError(insertErr.message.includes('duplicate') ? 'Already an admin.' : insertErr.message);
+      setAddAdminError(insertErr.message.includes('duplicate') ? 'This member is already an admin.' : insertErr.message);
     } else {
-      setAdminRoles(prev => [...prev, { user_id: target.id, role: 'admin' }]);
-      setAdminEmail('');
+      setAdminRoles(prev => [...prev, { user_id: selectedMember.id, role: 'admin' }]);
+      setSelectedMember(null);
+      setAdminSearch('');
       setShowAddAdmin(false);
     }
     setAddAdminLoading(false);
   }
+
+  const adminIds = new Set(adminRoles.map(a => a.user_id));
+
+  const adminSearchResults = adminSearch.trim()
+    ? members.filter(m =>
+        !adminIds.has(m.id) &&
+        (m.full_name.toLowerCase().includes(adminSearch.toLowerCase()) ||
+         (m.phone ?? '').includes(adminSearch))
+      ).slice(0, 6)
+    : [];
 
   async function removeAdmin(userId: string) {
     setSaving(userId);
@@ -99,8 +98,6 @@ export function MembersPage() {
     m.full_name.toLowerCase().includes(search.toLowerCase()) ||
     (m.phone ?? '').includes(search)
   );
-
-  const adminIds = new Set(adminRoles.map(a => a.user_id));
 
   if (loading) {
     return (
@@ -129,25 +126,82 @@ export function MembersPage() {
       {/* Add admin panel */}
       {showAddAdmin && (
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-6">
-          <h3 className="font-semibold text-stone-900 mb-3">Promote member to Admin</h3>
-          <p className="text-sm text-stone-600 mb-3">
-            Search by the member's full name. They must already have an account.
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={adminEmail}
-              onChange={e => setAdminEmail(e.target.value)}
-              placeholder="Enter member's full name"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <h3 className="font-semibold text-stone-900 mb-1">Promote member to Admin</h3>
+          <p className="text-sm text-stone-500 mb-4">Search by name or phone number.</p>
+
+          <div className="relative" ref={dropdownRef}>
+            {/* Selected member pill */}
+            {selectedMember ? (
+              <div className="flex items-center justify-between bg-white border-2 border-orange-500 rounded-xl px-4 py-3">
+                <div>
+                  <p className="font-medium text-stone-900 text-sm">{selectedMember.full_name}</p>
+                  {selectedMember.phone && <p className="text-stone-400 text-xs">{selectedMember.phone}</p>}
+                </div>
+                <button
+                  onClick={() => { setSelectedMember(null); setAdminSearch(''); }}
+                  className="text-stone-400 hover:text-stone-600 text-lg leading-none"
+                >×</button>
+              </div>
+            ) : (
+              <input
+                value={adminSearch}
+                onChange={e => { setAdminSearch(e.target.value); setShowDropdown(true); }}
+                onFocus={() => setShowDropdown(true)}
+                placeholder="Type a name or phone number…"
+                className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            )}
+
+            {/* Dropdown results */}
+            {showDropdown && adminSearchResults.length > 0 && !selectedMember && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-10 overflow-hidden">
+                {adminSearchResults.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => { setSelectedMember(m); setShowDropdown(false); setAdminSearch(''); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left border-b border-stone-50 last:border-0"
+                  >
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold text-orange-700 shrink-0">
+                      {m.full_name[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-stone-900 text-sm">{m.full_name}</p>
+                      <p className="text-stone-400 text-xs">{m.phone ?? 'No phone'}</p>
+                    </div>
+                    <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                      m.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {m.membership_status}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showDropdown && adminSearch.trim() && adminSearchResults.length === 0 && !selectedMember && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-10 px-4 py-3 text-sm text-stone-400">
+                No members found matching "{adminSearch}"
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 mt-3">
             <button
-              onClick={() => addAdmin(adminEmail)}
-              disabled={!adminEmail.trim() || addAdminLoading}
-              className="px-4 py-2.5 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 disabled:opacity-40 transition-colors"
+              onClick={addAdmin}
+              disabled={!selectedMember || addAdminLoading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 disabled:opacity-40 transition-colors"
             >
-              {addAdminLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add'}
+              {addAdminLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+              Make Admin
+            </button>
+            <button
+              onClick={() => { setShowAddAdmin(false); setSelectedMember(null); setAdminSearch(''); setAddAdminError(''); }}
+              className="px-4 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-50 transition-colors"
+            >
+              Cancel
             </button>
           </div>
+
           {addAdminError && (
             <p className="text-red-600 text-sm mt-2">{addAdminError}</p>
           )}
