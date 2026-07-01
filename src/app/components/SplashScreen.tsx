@@ -2,9 +2,11 @@ import { motion } from 'motion/react';
 
 interface SplashScreenProps {
   onGetStarted: () => void;
+  onSignIn: () => void;
+  onSignUp: () => void;
 }
 
-export function SplashScreen({ onGetStarted }: SplashScreenProps) {
+export function SplashScreen({ onGetStarted, onSignIn, onSignUp }: SplashScreenProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -15,7 +17,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}
-        className="text-center mb-32"
+        className="text-center mb-16"
       >
         <div className="mb-8">
           <div className="w-24 h-24 mx-auto bg-white rounded-3xl flex items-center justify-center mb-6 shadow-lg">
@@ -28,26 +30,41 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
           </div>
         </div>
 
-        <h1 className="text-5xl font-bold text-white mb-4">TimeSlot</h1>
-        <p className="text-orange-100 text-lg">Yogi Sports Complex</p>
+        <h1 className="text-4xl font-bold text-white mb-3">Yogi Sports Complex</h1>
         <p className="text-orange-200 text-sm mt-1">Nakuru, Kenya</p>
       </motion.div>
 
-      <motion.button
+      <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        onClick={onGetStarted}
-        className="w-full max-w-sm bg-white text-orange-600 font-semibold py-4 px-8 rounded-2xl hover:bg-orange-50 transition-colors shadow-md"
+        className="w-full max-w-sm space-y-3"
       >
-        Get started
-      </motion.button>
+        <button
+          onClick={onSignIn}
+          className="w-full bg-white text-orange-600 font-semibold py-4 px-8 rounded-2xl hover:bg-orange-50 transition-colors shadow-md"
+        >
+          Sign In
+        </button>
+        <button
+          onClick={onSignUp}
+          className="w-full bg-orange-500 text-white font-semibold py-4 px-8 rounded-2xl hover:bg-orange-400 transition-colors border border-orange-400"
+        >
+          Create Account
+        </button>
+        <button
+          onClick={onGetStarted}
+          className="w-full text-orange-200 font-medium py-3 px-8 rounded-2xl hover:text-white transition-colors text-sm"
+        >
+          Browse without signing in
+        </button>
+      </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="text-orange-200 text-sm mt-6"
+        className="text-orange-200 text-sm mt-8"
       >
         Reserve spaces. Track availability.
       </motion.p>
