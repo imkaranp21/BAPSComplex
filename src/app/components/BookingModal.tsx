@@ -300,10 +300,12 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {TIME_SLOTS.map(slot => {
-                      const closed = closedSlots.has(slot.start);
-                      const mine = !closed && myBookedSlots.has(slot.start);
-                      const taken = !closed && !mine && unavailableSlots.has(slot.start);
-                      const blocked = closed || mine || taken;
+                      const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
+                      const past = isToday && slot.end <= `${String(new Date().getHours()).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')}:00`;
+                      const closed = !past && closedSlots.has(slot.start);
+                      const mine = !past && !closed && myBookedSlots.has(slot.start);
+                      const taken = !past && !closed && !mine && unavailableSlots.has(slot.start);
+                      const blocked = past || closed || mine || taken;
                       const selected = selectedSlot?.start === slot.start;
                       return (
                         <button
@@ -312,7 +314,9 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                           disabled={blocked || loadingSlots}
                           title={closed ? 'Space is closed at this time' : mine ? 'You already have a booking at this time' : undefined}
                           className={`py-2.5 px-1 rounded-xl border-2 text-xs font-medium transition-colors ${
-                            closed
+                            past
+                              ? 'border-stone-100 bg-stone-50 text-stone-300 cursor-not-allowed line-through'
+                              : closed
                               ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
                               : mine
                               ? 'border-orange-200 bg-orange-50 text-orange-300 cursor-not-allowed'
