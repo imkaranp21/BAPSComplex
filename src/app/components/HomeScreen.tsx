@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Filter } from 'lucide-react';
+import { Filter, RefreshCw } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { SPACES } from '../data/spaces';
+import { supabase } from '../../lib/supabase';
+
+const GYM_CAPACITY = 30;
+
+interface SpaceStatus {
+  available: number;
+  total: number;
+  status: 'open' | 'full';
+}
 
 interface HomeScreenProps {
   onSpaceClick: (space: SpaceType) => void;
@@ -12,9 +22,57 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activeFilter, onClearFilter }: HomeScreenProps) {
+  const [gymCount, setGymCount] = useState<number | null>(null);
+  const [walkInCounts, setWalkInCounts] = useState<Record<string, number>>({});
+  const [spaceIds, setSpaceIds] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  useEffect(() => { fetchLiveData(); }, []);
+
+  async function fetchLiveData() {
+    const [gymRes, spacesRes, walkInsRes] = await Promise.all([
+      (supabase as any).from('gym_checkins').select('id', { count: 'exact' }).eq('is_active', true),
+      (supabase as any).from('spaces').select('id, slug'),
+      (supabase as any).from('walk_ins').select('id, space_id').eq('is_active', true),
+    ]);
+
+    setGymCount(gymRes.count ?? 0);
+
+    const idMap: Record<string, string> = {};
+    for (const s of (spacesRes.data ?? [])) idMap[s.slug] = s.id;
+    setSpaceIds(idMap);
+
+    const counts: Record<string, number> = {};
+    for (const w of (walkInsRes.data ?? [])) {
+      counts[w.space_id] = (counts[w.space_id] ?? 0) + 1;
+    }
+    setWalkInCounts(counts);
+
+    setLastUpdated(new Date());
+    setLoading(false);
+  }
+
   const filtered = activeFilter
     ? SPACES.filter(s => s.activities.some(a => a.toLowerCase() === activeFilter.toLowerCase()))
     : SPACES;
+
+  function getSpaceStatus(spaceId: string): SpaceStatus {
+    if (spaceId === 'gym') {
+      const count = gymCount ?? 0;
+      return {
+        available: GYM_CAPACITY - count,
+        total: GYM_CAPACITY,
+        status: count >= GYM_CAPACITY ? 'full' : 'open',
+      };
+    }
+    const dbId = spaceIds[spaceId];
+    const space = SPACES.find(s => s.id === spaceId);
+    const total = space?.total ?? 1;
+    const inUse = dbId ? (walkInCounts[dbId] ?? 0) : 0;
+    const available = Math.max(0, total - inUse);
+    return { available, total, status: available === 0 ? 'full' : 'open' };
+  }
 
   return (
     <div className="bg-[#FFFBF5]">
@@ -37,26 +95,34 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="text-stone-400 text-sm font-medium tracking-wide">NOW</div>
-            <div className="text-stone-400 text-xs">
-              Updated: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-            </div>
+            <button
+              onClick={fetchLiveData}
+              className="flex items-center gap-1.5 text-stone-400 text-xs hover:text-stone-600 transition-colors"
+            >
+              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+            </button>
           </div>
 
           <div className="space-y-3">
-            {filtered.map(space => (
-              <SpaceCard
-                key={space.id}
-                title={space.name}
-                subtitle={space.hasCapacity
-                  ? `${space.available} of ${space.total} spots available`
-                  : space.description}
-                status={space.hasCapacity
-                  ? `${space.available}/${space.total}`
-                  : space.status === 'open' ? 'Open' : 'Full'}
-                statusType={space.available === 0 ? 'full' : space.hasCapacity ? 'capacity' : 'available'}
-                onClick={() => onSpaceClick(space.id)}
-              />
-            ))}
+            {filtered.map(space => {
+              const { available, total, status } = getSpaceStatus(space.id);
+              const isGym = space.id === 'gym';
+              return (
+                <SpaceCard
+                  key={space.id}
+                  title={space.name}
+                  subtitle={isGym
+                    ? `${available} of ${total} spots available`
+                    : space.description}
+                  status={isGym
+                    ? `${total - available}/${total}`
+                    : status === 'open' ? 'Open' : 'Full'}
+                  statusType={available === 0 ? 'full' : isGym ? 'capacity' : 'available'}
+                  onClick={() => onSpaceClick(space.id)}
+                />
+              );
+            })}
           </div>
         </motion.div>
 
