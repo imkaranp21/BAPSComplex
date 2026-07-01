@@ -1,10 +1,11 @@
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router';
-import { LayoutDashboard, Users, CalendarDays, Dumbbell, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, Dumbbell, LogOut, Shield, Footprints } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { DashboardPage } from './DashboardPage';
 import { MembersPage } from './MembersPage';
 import { BookingsPage } from './BookingsPage';
 import { GymPage } from './GymPage';
+import { WalkInsPage } from './WalkInsPage';
 
 export function AdminApp() {
   const { user, loading, isAdmin, signOut } = useAuth();
@@ -45,6 +46,7 @@ export function AdminApp() {
     { to: '/admin/members', label: 'Members', icon: <Users className="w-5 h-5" />, end: false },
     { to: '/admin/bookings', label: 'Bookings', icon: <CalendarDays className="w-5 h-5" />, end: false },
     { to: '/admin/gym', label: 'Gym', icon: <Dumbbell className="w-5 h-5" />, end: false },
+    { to: '/admin/walk-ins', label: 'Walk-Ins', icon: <Footprints className="w-5 h-5" />, end: false },
   ];
 
   return (
@@ -101,6 +103,7 @@ export function AdminApp() {
           <Route path="members" element={<MembersPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="gym" element={<GymPage />} />
+          <Route path="walk-ins" element={<WalkInsPage />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </main>
