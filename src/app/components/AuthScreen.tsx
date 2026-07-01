@@ -39,6 +39,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (err) {
+        console.error('[forgot-password] Supabase error:', err);
         setError('Could not send reset link. Please wait a few minutes and try again.');
         setSubmitting(false);
       } else {
