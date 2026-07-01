@@ -100,19 +100,13 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     setSelectedSlot(null);
 
     async function fetchUnavailable() {
-      // Collect all space IDs to block (this space + conflicting spaces)
       const conflictSlugs = SPACE_CONFLICTS[space] ?? [];
       const allSlugs = [space, ...conflictSlugs];
-      const { data: spaceRows } = await (supabase as any)
-        .from('spaces').select('id, slug').in('slug', allSlugs);
-      const slugToId: Record<string, string> = {};
-      (spaceRows ?? []).forEach((s: any) => { slugToId[s.slug] = s.id; });
-      const allSpaceIds = allSlugs.map(s => slugToId[s]).filter(Boolean);
 
       // SECURITY DEFINER RPC — sees all bookings regardless of RLS
       const [blockedRes, myRes, closuresRes] = await Promise.all([
         (supabase as any).rpc('get_blocked_slots', {
-          p_space_ids: allSpaceIds,
+          p_space_slugs: allSlugs,
           p_date: selectedDate,
         }),
         supabase
@@ -179,8 +173,8 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
       setError(
         err.message.includes('already have a booking')
           ? 'You already have a booking during this time slot.'
-          : err.message.includes('conflict') || err.message.includes('already taken')
-          ? 'That slot was just taken — please choose another time.'
+          : err.message.includes('shared court') || err.message.includes('conflict') || err.message.includes('already taken')
+          ? 'That slot is blocked — a conflicting space is already booked at this time.'
           : 'Booking failed. Please try again.'
       );
       setSubmitting(false);
