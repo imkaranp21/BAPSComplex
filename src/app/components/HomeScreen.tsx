@@ -1,17 +1,8 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Filter, RefreshCw } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { SPACES } from '../data/spaces';
-import { supabase } from '../../lib/supabase';
-
-const GYM_CAPACITY = 30;
-
-interface SpaceStatus {
-  available: number;
-  total: number;
-  status: 'open' | 'full';
-}
+import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
 
 interface HomeScreenProps {
   onSpaceClick: (space: SpaceType) => void;
@@ -22,65 +13,11 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activeFilter, onClearFilter }: HomeScreenProps) {
-  const [gymCount, setGymCount] = useState<number | null>(null);
-  const [occupiedUnits, setOccupiedUnits] = useState<Record<string, number>>({});
-  const [spaceIds, setSpaceIds] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  useEffect(() => { fetchLiveData(); }, []);
-
-  async function fetchLiveData() {
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:00`;
-
-    const [gymRes, spacesRes, walkInsRes, bookingsRes] = await Promise.all([
-      (supabase as any).from('gym_checkins').select('id', { count: 'exact' }).eq('is_active', true),
-      (supabase as any).from('spaces').select('id, slug'),
-      (supabase as any).from('walk_ins').select('space_id').eq('is_active', true),
-      (supabase as any).rpc('get_space_availability', { check_date: todayStr, check_time: timeStr }),
-    ]);
-
-    setGymCount(gymRes.count ?? 0);
-
-    const idMap: Record<string, string> = {};
-    for (const s of (spacesRes.data ?? [])) idMap[s.slug] = s.id;
-    setSpaceIds(idMap);
-
-    const counts: Record<string, number> = {};
-    for (const w of (walkInsRes.data ?? [])) {
-      counts[w.space_id] = (counts[w.space_id] ?? 0) + 1;
-    }
-    for (const b of (bookingsRes.data ?? [])) {
-      counts[b.space_id] = (counts[b.space_id] ?? 0) + Number(b.booked_units);
-    }
-    setOccupiedUnits(counts);
-
-    setLastUpdated(new Date());
-    setLoading(false);
-  }
+  const { availability, loading, lastUpdated, refresh } = useSpaceAvailability();
 
   const filtered = activeFilter
     ? SPACES.filter(s => s.activities.some(a => a.toLowerCase() === activeFilter.toLowerCase()))
     : SPACES;
-
-  function getSpaceStatus(spaceId: string): SpaceStatus {
-    if (spaceId === 'gym') {
-      const count = gymCount ?? 0;
-      return {
-        available: GYM_CAPACITY - count,
-        total: GYM_CAPACITY,
-        status: count >= GYM_CAPACITY ? 'full' : 'open',
-      };
-    }
-    const dbId = spaceIds[spaceId];
-    const space = SPACES.find(s => s.id === spaceId);
-    const total = space?.total ?? 1;
-    const inUse = dbId ? (occupiedUnits[dbId] ?? 0) : 0;
-    const available = Math.max(0, total - inUse);
-    return { available, total, status: available === 0 ? 'full' : 'open' };
-  }
 
   return (
     <div className="bg-[#FFFBF5]">
@@ -104,7 +41,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
           <div className="flex items-center justify-between mb-4">
             <div className="text-stone-400 text-sm font-medium tracking-wide">NOW</div>
             <button
-              onClick={fetchLiveData}
+              onClick={refresh}
               className="flex items-center gap-1.5 text-stone-400 text-xs hover:text-stone-600 transition-colors"
             >
               <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
@@ -114,21 +51,35 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
 
           <div className="space-y-3">
             {filtered.map(space => {
-              const { available, total, status } = getSpaceStatus(space.id);
+              const av = availability[space.id];
               const isGym = space.id === 'gym';
+              const subtitle = isGym && av
+                ? `${av.available} of ${av.total} spots available`
+                : space.description;
+              const statusLabel = av?.label ?? (isGym ? '…' : 'Open');
+              const statusType = av?.statusType ?? 'open';
+
               return (
-                <SpaceCard
+                <motion.button
                   key={space.id}
-                  title={space.name}
-                  subtitle={isGym
-                    ? `${available} of ${total} spots available`
-                    : space.description}
-                  status={isGym
-                    ? `${total - available}/${total}`
-                    : status === 'open' ? 'Open' : 'Full'}
-                  statusType={available === 0 ? 'full' : isGym ? 'capacity' : 'available'}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => onSpaceClick(space.id)}
-                />
+                  className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-stone-900 font-semibold mb-1">{space.name}</h3>
+                      <p className="text-stone-500 text-sm">{subtitle}</p>
+                    </div>
+                    <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
+                      statusType === 'inuse' ? 'bg-red-600 text-white'
+                      : statusType === 'capacity' ? 'bg-orange-600 text-white'
+                      : 'bg-green-600 text-white'
+                    }`}>
+                      {statusLabel}
+                    </div>
+                  </div>
+                </motion.button>
               );
             })}
           </div>
@@ -155,39 +106,5 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
         </motion.div>
       </div>
     </div>
-  );
-}
-
-interface SpaceCardProps {
-  title: string;
-  subtitle: string;
-  status: string;
-  statusType: 'available' | 'full' | 'capacity';
-  onClick: () => void;
-}
-
-function SpaceCard({ title, subtitle, status, statusType, onClick }: SpaceCardProps) {
-  const statusColors = {
-    available: 'bg-green-600 text-white',
-    full: 'bg-red-600 text-white',
-    capacity: 'bg-orange-600 text-white',
-  };
-
-  return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h3 className="text-stone-900 font-semibold mb-1">{title}</h3>
-          <p className="text-stone-500 text-sm">{subtitle}</p>
-        </div>
-        <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${statusColors[statusType]}`}>
-          {status}
-        </div>
-      </div>
-    </motion.button>
   );
 }

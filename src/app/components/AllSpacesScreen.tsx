@@ -3,6 +3,7 @@ import { ArrowLeft, Filter } from 'lucide-react';
 import { useState } from 'react';
 import type { SpaceType } from '../App';
 import { SPACES } from '../data/spaces';
+import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
 
 interface AllSpacesScreenProps {
   onBack: () => void;
@@ -13,7 +14,8 @@ interface AllSpacesScreenProps {
 }
 
 export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFilter, onClearFilter }: AllSpacesScreenProps) {
-  const [filterMode, setFilterMode] = useState<'all' | 'available' | 'full'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'available' | 'inuse'>('all');
+  const { availability } = useSpaceAvailability();
 
   let spaces = SPACES;
   if (activeFilter && activeFilter !== 'All activities') {
@@ -23,8 +25,9 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
   }
 
   const filteredSpaces = spaces.filter(space => {
-    if (filterMode === 'available') return space.available > 0;
-    if (filterMode === 'full') return space.available === 0;
+    const av = availability[space.id];
+    if (filterMode === 'available') return !av?.inUse;
+    if (filterMode === 'inuse') return av?.inUse;
     return true;
   });
 
@@ -53,7 +56,7 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
         <div className="flex gap-2">
           <FilterChip label="All" active={filterMode === 'all'} onClick={() => setFilterMode('all')} />
           <FilterChip label="Available" active={filterMode === 'available'} onClick={() => setFilterMode('available')} />
-          <FilterChip label="Full" active={filterMode === 'full'} onClick={() => setFilterMode('full')} />
+          <FilterChip label="In Use" active={filterMode === 'inuse'} onClick={() => setFilterMode('inuse')} />
         </div>
       </div>
 
@@ -66,33 +69,41 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
             </button>
           </div>
         ) : (
-          filteredSpaces.map((space, index) => (
-            <motion.button
-              key={space.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onSpaceClick(space.id)}
-              className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-stone-900 font-semibold mb-1">{space.name}</h3>
-                  <p className="text-stone-500 text-sm">
-                    {space.hasCapacity
-                      ? `${space.available} of ${space.total} spots available`
-                      : space.description}
-                  </p>
+          filteredSpaces.map((space, index) => {
+            const av = availability[space.id];
+            const isGym = space.id === 'gym';
+            const subtitle = isGym && av
+              ? `${av.available} of ${av.total} spots available`
+              : space.description;
+            const statusLabel = av?.label ?? 'Open';
+            const statusType = av?.statusType ?? 'open';
+
+            return (
+              <motion.button
+                key={space.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onSpaceClick(space.id)}
+                className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-stone-900 font-semibold mb-1">{space.name}</h3>
+                    <p className="text-stone-500 text-sm">{subtitle}</p>
+                  </div>
+                  <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
+                    statusType === 'inuse' ? 'bg-red-600 text-white'
+                    : statusType === 'capacity' ? 'bg-orange-600 text-white'
+                    : 'bg-green-600 text-white'
+                  }`}>
+                    {statusLabel}
+                  </div>
                 </div>
-                <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
-                  space.available === 0 ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
-                }`}>
-                  {space.available === 0 ? 'Full' : 'Open'}
-                </div>
-              </div>
-            </motion.button>
-          ))
+              </motion.button>
+            );
+          })
         )}
       </div>
 

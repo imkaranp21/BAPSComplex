@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Users, CalendarPlus } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { getSpace } from '../data/spaces';
+import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
 
 interface SpaceDetailScreenProps {
   space: SpaceType;
@@ -11,6 +12,12 @@ interface SpaceDetailScreenProps {
 
 export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScreenProps) {
   const spaceData = getSpace(space);
+  const { availability } = useSpaceAvailability();
+  const av = availability[space];
+
+  const gymCount = av ? av.total - av.available : 0;
+  const gymTotal = av?.total ?? spaceData.total;
+  const pct = gymTotal > 0 ? (gymCount / gymTotal) * 100 : 0;
 
   return (
     <div className="bg-[#FFFBF5]">
@@ -44,24 +51,19 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
                   <span className="text-stone-700 font-medium">People inside</span>
                 </div>
                 <span className="text-2xl font-bold text-stone-900">
-                  {spaceData.total - spaceData.available}
-                  <span className="text-stone-400 text-base font-normal"> / {spaceData.total}</span>
+                  {gymCount}
+                  <span className="text-stone-400 text-base font-normal"> / {gymTotal}</span>
                 </span>
               </div>
-              {/* Capacity bar */}
               <div className="w-full bg-stone-100 rounded-full h-3">
                 <div
                   className={`h-3 rounded-full transition-all ${
-                    (spaceData.total - spaceData.available) / spaceData.total > 0.8
-                      ? 'bg-red-500'
-                      : (spaceData.total - spaceData.available) / spaceData.total > 0.5
-                      ? 'bg-orange-500'
-                      : 'bg-green-500'
+                    pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-orange-500' : 'bg-green-500'
                   }`}
-                  style={{ width: `${((spaceData.total - spaceData.available) / spaceData.total) * 100}%` }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="text-stone-400 text-xs mt-2">{spaceData.available} spots remaining</p>
+              <p className="text-stone-400 text-xs mt-2">{av?.available ?? gymTotal} spots remaining</p>
             </div>
           </motion.div>
         )}
@@ -71,16 +73,20 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6">
             <div className="text-stone-400 text-sm font-medium tracking-wide mb-3">AVAILABILITY</div>
             <div className="space-y-2">
-              {spaceData.units.map(unit => (
-                <div key={unit.id} className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm flex items-center justify-between">
-                  <h3 className="text-stone-900 font-semibold">{unit.name}</h3>
-                  <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                    unit.status === 'open' ? 'bg-green-600 text-white' : 'bg-stone-200 text-stone-700'
-                  }`}>
-                    {unit.status === 'open' ? 'Open' : 'In use'}
+              {spaceData.units.map((unit, i) => {
+                const available = av?.available ?? spaceData.units!.length;
+                const inUse = i >= available;
+                return (
+                  <div key={unit.id} className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm flex items-center justify-between">
+                    <h3 className="text-stone-900 font-semibold">{unit.name}</h3>
+                    <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                      inUse ? 'bg-red-100 text-red-700' : 'bg-green-600 text-white'
+                    }`}>
+                      {inUse ? 'In Use' : 'Open'}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -95,9 +101,9 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
                 <p className="text-stone-500 text-sm">{spaceData.description}</p>
               </div>
               <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
-                spaceData.available > 0 ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                av?.inUse ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
               }`}>
-                {spaceData.available > 0 ? 'Available' : 'Full'}
+                {av?.inUse ? 'In Use' : 'Open'}
               </div>
             </div>
           </motion.div>
