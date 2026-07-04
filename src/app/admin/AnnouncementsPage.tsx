@@ -137,7 +137,7 @@ export function AnnouncementsPage() {
           ) : (
             <div className="space-y-3">
               {announcements.map(a => {
-                const expired = a.expires_at && a.expires_at < today;
+                const expired = a.expires_at && new Date(a.expires_at) < new Date();
                 return (
                   <div
                     key={a.id}
