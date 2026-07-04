@@ -24,9 +24,11 @@ export function AnnouncementsBell() {
   }, []);
 
   async function fetch() {
+    const now = new Date().toISOString();
     const { data } = await (supabase as any)
       .from('announcements')
       .select('id, title, body, created_at, expires_at')
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
       .order('created_at', { ascending: false });
     setAnnouncements((data as Announcement[]) ?? []);
   }
