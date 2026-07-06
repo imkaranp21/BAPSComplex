@@ -35,6 +35,7 @@ export function MembersPage() {
   const [addAdminLoading, setAddAdminLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Member | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [staffConfirm, setStaffConfirm] = useState<{ member: Member; grantAccess: boolean } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { load(); }, []);
@@ -329,9 +330,9 @@ export function MembersPage() {
                             )}
                           </div>
                         )}
-                        {/* Staff / door-check toggle */}
+                        {/* Staff / door-check toggle — always asks first */}
                         <button
-                          onClick={() => updateMember(member.id, { is_staff: !member.is_staff } as any)}
+                          onClick={() => setStaffConfirm({ member, grantAccess: !member.is_staff })}
                           title={member.is_staff ? 'Revoke staff portal access' : 'Grant staff portal access'}
                           className={`flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all ${
                             member.is_staff
@@ -402,6 +403,59 @@ export function MembersPage() {
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Staff promote / demote confirmation */}
+      {staffConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setStaffConfirm(null)} />
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full text-center">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+              staffConfirm.grantAccess
+                ? 'bg-amber-500/10 border border-amber-500/20'
+                : 'bg-zinc-800 border border-zinc-700'
+            }`}>
+              <BellRing className={`w-6 h-6 ${staffConfirm.grantAccess ? 'text-amber-400' : 'text-zinc-500'}`} />
+            </div>
+            <h2 className="text-base font-black text-white tracking-tight mb-2">
+              {staffConfirm.grantAccess ? 'Give Staff Access?' : 'Remove Staff Access?'}
+            </h2>
+            <p className="text-zinc-500 text-sm mb-1">
+              {staffConfirm.grantAccess
+                ? 'This will let'
+                : 'This will prevent'}
+            </p>
+            <p className="font-bold text-white mb-3">{staffConfirm.member.full_name}</p>
+            <p className="text-xs text-zinc-600 mb-6 leading-relaxed">
+              {staffConfirm.grantAccess
+                ? 'log into the staff door-check portal. They will no longer appear as a member.'
+                : 'from accessing the staff portal. They will return to the members list.'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setStaffConfirm(null)}
+                className="flex-1 py-3 rounded-xl border border-zinc-700 text-zinc-400 font-bold text-sm hover:text-white hover:border-zinc-600 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const { member, grantAccess } = staffConfirm;
+                  setStaffConfirm(null);
+                  await updateMember(member.id, { is_staff: grantAccess } as any);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${
+                  staffConfirm.grantAccess
+                    ? 'bg-amber-500 hover:bg-amber-400 text-black'
+                    : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                }`}
+              >
+                <BellRing className="w-4 h-4" />
+                {staffConfirm.grantAccess ? 'Grant Access' : 'Remove Access'}
               </button>
             </div>
           </div>
