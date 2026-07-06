@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 
@@ -6,6 +7,8 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onGetStarted }: SplashScreenProps) {
+  const [logoError, setLogoError] = useState(false);
+
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,_rgba(234,88,12,0.08)_0%,_transparent_70%)]" />
@@ -16,16 +19,27 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 flex flex-col items-center"
       >
-        {/* BAPS Logo — inverted to white for dark bg */}
-        <motion.img
-          src="/baps-logo.png"
-          alt="BAPS"
+        {/* BAPS Logo */}
+        <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="w-24 h-24 object-contain mb-10"
-          style={{ filter: 'brightness(0) invert(1)' }}
-        />
+          className="mb-10"
+        >
+          {logoError ? (
+            <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
+              <span className="text-black font-black text-5xl leading-none">Y</span>
+            </div>
+          ) : (
+            <img
+              src="/baps-logo.png"
+              alt="BAPS"
+              className="w-24 h-24 object-contain"
+              style={{ filter: 'brightness(0) invert(1)' }}
+              onError={() => setLogoError(true)}
+            />
+          )}
+        </motion.div>
 
         <div className="text-center leading-none mb-3">
           <h1 className="text-[54px] md:text-7xl font-black text-white tracking-tighter">YOGI</h1>
