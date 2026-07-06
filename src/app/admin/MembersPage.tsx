@@ -112,7 +112,8 @@ export function MembersPage() {
   }
 
   const filtered = members.filter(m =>
-    m.full_name.toLowerCase().includes(search.toLowerCase()) || (m.phone ?? '').includes(search)
+    !m.is_staff &&
+    (m.full_name.toLowerCase().includes(search.toLowerCase()) || (m.phone ?? '').includes(search))
   );
 
   if (loading) {
