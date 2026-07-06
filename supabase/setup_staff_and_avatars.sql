@@ -13,16 +13,19 @@ VALUES ('member-avatars', 'member-avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Allow any authenticated user to upload/update their own avatar
-CREATE POLICY IF NOT EXISTS "Auth users upload avatar"
+DROP POLICY IF EXISTS "Auth users upload avatar" ON storage.objects;
+CREATE POLICY "Auth users upload avatar"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'member-avatars');
 
-CREATE POLICY IF NOT EXISTS "Auth users update avatar"
+DROP POLICY IF EXISTS "Auth users update avatar" ON storage.objects;
+CREATE POLICY "Auth users update avatar"
   ON storage.objects FOR UPDATE TO authenticated
   USING (bucket_id = 'member-avatars');
 
 -- Allow public read of all avatars
-CREATE POLICY IF NOT EXISTS "Public read avatars"
+DROP POLICY IF EXISTS "Public read avatars" ON storage.objects;
+CREATE POLICY "Public read avatars"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'member-avatars');
 
