@@ -23,21 +23,25 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
     <nav className="hidden md:flex items-center justify-between px-8 h-16 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
       {/* Brand */}
       <div className="flex items-center gap-3">
-        {logoError ? (
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-black font-black text-sm leading-none">Y</span>
-          </div>
-        ) : (
-          <TransparentLogo
-            src="/baps-logo.png"
-            className="w-8 h-8 object-contain shrink-0"
-            fallback={
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-black font-black text-sm leading-none">Y</span>
-              </div>
-            }
-          />
-        )}
+        <div className="relative flex items-center justify-center shrink-0 w-8 h-8">
+          <div className="absolute w-12 h-12 rounded-full bg-white/15 blur-md" />
+          <div className="absolute w-8 h-8 rounded-full bg-violet-500/20 blur-sm" />
+          {logoError ? (
+            <div className="relative w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-black text-sm leading-none">Y</span>
+            </div>
+          ) : (
+            <TransparentLogo
+              src="/baps-logo.png"
+              className="relative w-8 h-8 object-contain"
+              fallback={
+                <div className="relative w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-black text-sm leading-none">Y</span>
+                </div>
+              }
+            />
+          )}
+        </div>
         <div>
           <span className="text-white font-black text-base tracking-tight">YOGI SPORTS</span>
           <span className="text-zinc-600 text-xs font-medium ml-2 tracking-widest uppercase hidden lg:inline">Nakuru</span>
@@ -52,7 +56,7 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-200 ${
               activeTab === tab.id
-                ? 'text-orange-500 border-b-2 border-orange-500 pb-1.5'
+                ? 'text-violet-400 border-b-2 border-violet-500 pb-1.5'
                 : 'text-zinc-500 hover:text-zinc-200 border-b-2 border-transparent pb-1.5'
             }`}
           >
