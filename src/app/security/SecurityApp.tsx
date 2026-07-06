@@ -239,8 +239,8 @@ function fireNotification(title: string, body: string) {
   }
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
-function StaffDashboard() {
+// ── Dashboard (also exported for use in main App) ─────────────────────────────
+export function StaffDashboard() {
   const { signOut } = useAuth();
   const [arrivals, setArrivals] = useState<Arrival[]>([]);
   const [loading, setLoading] = useState(true);

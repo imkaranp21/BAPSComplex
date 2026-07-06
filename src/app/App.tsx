@@ -14,13 +14,14 @@ import { BottomNav, type NavTab } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { AnnouncementsBell } from './components/AnnouncementsBell';
 import { TransparentLogo } from './components/TransparentLogo';
+import { StaffDashboard } from './security/SecurityApp';
 import { useAuth } from '../lib/AuthContext';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
 export type SpaceType = 'gym' | 'cricket' | 'futsal' | 'volleyball' | 'table-tennis' | 'pool-table' | 'darts';
 
 export default function App() {
-  const { user, profile, loading, isRecovery, clearRecovery } = useAuth();
+  const { user, profile, loading, isRecovery, clearRecovery, isStaff, isAdmin } = useAuth();
 
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [selectedSpace, setSelectedSpace] = useState<SpaceType | null>(null);
@@ -44,6 +45,11 @@ export default function App() {
   // Password reset link was clicked — show the set-new-password form
   if (isRecovery) {
     return <ResetPasswordScreen onDone={clearRecovery} />;
+  }
+
+  // Staff users skip the member app entirely and land on the door-check portal
+  if (user && profile && isStaff && !isAdmin) {
+    return <StaffDashboard />;
   }
 
   const handleGetStarted = () => {
