@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, ArrowRight, Loader2, Camera } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -13,7 +13,7 @@ interface AuthScreenProps {
 }
 
 const inputClass =
-  'w-full px-4 py-3.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm';
+  'w-full px-4 py-3.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors text-sm';
 const labelClass = 'block text-[10px] font-black text-zinc-600 tracking-[0.25em] uppercase mb-2';
 
 export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScreenProps) {
@@ -24,13 +24,40 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const { signIn, signUp } = useAuth();
 
-  function switchMode(next: Mode) { setMode(next); setError(''); }
+  function switchMode(next: Mode) { setMode(next); setError(''); setPhotoFile(null); setPhotoPreview(null); }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = ev => setPhotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadPhoto(userId: string, file: File): Promise<string | null> {
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${userId}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('member-avatars')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) return null;
+      const { data: { publicUrl } } = supabase.storage.from('member-avatars').getPublicUrl(path);
+      return publicUrl;
+    } catch {
+      return null;
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,16 +86,30 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         onSuccess();
       }
     } else {
+      if (!photoFile) {
+        setError('A photo is required to register. Please upload a clear photo of yourself.');
+        setSubmitting(false);
+        return;
+      }
       const fullName = [firstName.trim(), middleName.trim(), lastName.trim()].filter(Boolean).join(' ');
-      const { error: err, needsConfirmation } = await signUp(email, password, fullName, phone);
+      const { error: err, needsConfirmation, userId } = await signUp(email, password, fullName, phone);
       if (err) {
         setError(err.message);
         setSubmitting(false);
-      } else if (needsConfirmation) {
-        setAwaitingConfirmation(true);
-        setSubmitting(false);
       } else {
-        onSuccess();
+        // Upload photo using the new user's ID
+        if (userId && photoFile) {
+          const avatarUrl = await uploadPhoto(userId, photoFile);
+          if (avatarUrl) {
+            await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
+          }
+        }
+        if (needsConfirmation) {
+          setAwaitingConfirmation(true);
+          setSubmitting(false);
+        } else {
+          onSuccess();
+        }
       }
     }
   }
@@ -92,7 +133,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
           {emailShown && <p className="font-black text-white text-sm mb-7">{emailShown}</p>}
           <button
             onClick={ctaAction}
-            className="w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors"
+            className="w-full flex items-center justify-between bg-violet-600 hover:bg-violet-500 text-white font-black py-5 px-6 rounded-2xl transition-colors"
           >
             <span className="text-sm tracking-widest uppercase">{cta}</span>
             <ArrowRight className="w-4 h-4" />
@@ -105,7 +146,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   if (awaitingConfirmation) {
     return (
       <InfoScreen
-        icon={<Mail className="w-9 h-9 text-orange-500" />}
+        icon={<Mail className="w-9 h-9 text-violet-400" />}
         title="Check Email"
         subtitle={`We sent a confirmation link to`}
         emailShown={email}
@@ -118,7 +159,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   if (resetSent) {
     return (
       <InfoScreen
-        icon={<Mail className="w-9 h-9 text-orange-500" />}
+        icon={<Mail className="w-9 h-9 text-violet-400" />}
         title="Link Sent"
         subtitle={`Password reset sent to`}
         emailShown={email}
@@ -150,7 +191,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         >
           {/* Brand */}
           <div className="mb-10">
-            <div className="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mb-6">
+            <div className="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center mb-6">
               <span className="text-black text-2xl font-black leading-none">Y</span>
             </div>
             <h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">
@@ -188,6 +229,49 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <>
+                {/* Photo upload — required */}
+                <div>
+                  <label className={labelClass}>
+                    Your Photo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`w-full rounded-xl border transition-all flex items-center gap-4 p-3 ${
+                      photoPreview
+                        ? 'border-violet-500/50 bg-violet-600/5'
+                        : 'border-dashed border-zinc-700 bg-zinc-900 hover:border-zinc-600'
+                    }`}
+                  >
+                    {photoPreview ? (
+                      <>
+                        <img src={photoPreview} alt="Preview" className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                        <div className="text-left">
+                          <p className="text-white text-sm font-black">Photo selected</p>
+                          <p className="text-zinc-500 text-xs mt-0.5">Tap to change</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+                          <Camera className="w-6 h-6 text-zinc-600" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-zinc-400 text-sm font-black">Upload your photo</p>
+                          <p className="text-zinc-600 text-xs mt-0.5">Required for security identification</p>
+                        </div>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={labelClass}>First Name</label>
@@ -227,7 +311,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
                   <label className={labelClass}>Password</label>
                   {mode === 'login' && (
                     <button type="button" onClick={() => switchMode('forgot')}
-                      className="text-[10px] text-orange-500 hover:text-orange-400 font-black tracking-[0.2em] uppercase">
+                      className="text-[10px] text-violet-400 hover:text-violet-300 font-black tracking-[0.2em] uppercase">
                       Forgot?
                     </button>
                   )}
@@ -247,7 +331,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
             <button
               type="submit"
               disabled={submitting}
-              className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-40 mt-2"
+              className="group w-full flex items-center justify-between bg-violet-600 hover:bg-violet-500 text-white font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-40 mt-2"
             >
               <span className="flex items-center gap-2.5">
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}

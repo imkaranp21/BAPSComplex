@@ -129,7 +129,7 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
         transition={{ delay: 0.2 }}
         whileTap={{ scale: 0.98 }}
         onClick={onBookClick}
-        className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors duration-200"
+        className="group w-full flex items-center justify-between bg-violet-600 hover:bg-violet-500 text-white font-black py-5 px-6 rounded-2xl transition-colors duration-200"
       >
         <div className="flex items-center gap-3">
           <CalendarPlus className="w-4 h-4" />

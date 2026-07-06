@@ -55,7 +55,7 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
                 onClick={() => setSelectedActivity(activity)}
                 className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all text-left ${
                   selectedActivity === activity
-                    ? 'bg-orange-500 text-black'
+                    ? 'bg-violet-600 text-white'
                     : 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-white'
                 }`}
               >
@@ -69,7 +69,7 @@ export function ActivityFilterModal({ onClose, onApply, currentFilter }: Activit
           <button
             onClick={handleApply}
             disabled={!selectedActivity}
-            className="w-full font-bold py-4 px-4 rounded-xl transition-colors bg-orange-500 hover:bg-orange-400 text-black disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full font-bold py-4 px-4 rounded-xl transition-colors bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Show results
           </button>

@@ -67,7 +67,7 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
         <p className="text-zinc-600 text-sm mb-9 text-center max-w-xs">Sign in to view your upcoming and past bookings.</p>
         <button
           onClick={onSignIn}
-          className="bg-orange-500 hover:bg-orange-400 text-black font-black px-10 py-4 rounded-2xl transition-colors text-sm tracking-widest uppercase"
+          className="bg-violet-600 hover:bg-violet-500 text-white font-black px-10 py-4 rounded-2xl transition-colors text-sm tracking-widest uppercase"
         >
           Sign In
         </button>
@@ -95,7 +95,7 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
 
         {loading ? (
           <div className="flex justify-center py-14">
-            <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+            <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           </div>
         ) : upcoming.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 text-center">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, UserPlus, Shield, ShieldOff, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, UserPlus, Shield, ShieldOff, Loader2, Trash2, AlertTriangle, BellRing } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import { format } from 'date-fns';
@@ -11,13 +11,14 @@ interface Member {
   membership_group: string | null;
   membership_tier: number | null;
   membership_status: string;
+  is_staff: boolean;
   created_at: string;
   email?: string;
 }
 
 interface AdminRole { user_id: string; role: string }
 
-const selectBase = 'text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-zinc-800 border-zinc-700 text-zinc-300';
+const selectBase = 'text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 bg-zinc-800 border-zinc-700 text-zinc-300';
 
 export function MembersPage() {
   const { isAdmin, user: currentUser } = useAuth();
@@ -41,7 +42,7 @@ export function MembersPage() {
   async function load() {
     const [membersRes, adminsRes] = await Promise.all([
       (supabase as any).from('profiles')
-        .select('id, full_name, phone, membership_group, membership_tier, membership_status, created_at')
+        .select('id, full_name, phone, membership_group, membership_tier, membership_status, is_staff, created_at')
         .order('created_at', { ascending: false }),
       (supabase as any).from('admin_roles').select('user_id, role'),
     ]);
@@ -107,7 +108,7 @@ export function MembersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -121,7 +122,7 @@ export function MembersPage() {
         </div>
         <button
           onClick={() => setShowAddAdmin(v => !v)}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
+          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Add Admin
@@ -136,7 +137,7 @@ export function MembersPage() {
 
           <div className="relative" ref={dropdownRef}>
             {selectedMember ? (
-              <div className="flex items-center justify-between bg-zinc-800 border border-orange-500/50 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-zinc-800 border border-violet-500/50 rounded-xl px-4 py-3">
                 <div>
                   <p className="font-bold text-white text-sm">{selectedMember.full_name}</p>
                   {selectedMember.phone && <p className="text-zinc-500 text-xs">{selectedMember.phone}</p>}
@@ -149,7 +150,7 @@ export function MembersPage() {
                 onChange={e => { setAdminSearch(e.target.value); setShowDropdown(true); }}
                 onFocus={() => setShowDropdown(true)}
                 placeholder="Type a name or phone number…"
-                className="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
               />
             )}
 
@@ -161,7 +162,7 @@ export function MembersPage() {
                     onClick={() => { setSelectedMember(m); setShowDropdown(false); setAdminSearch(''); }}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left border-b border-zinc-800 last:border-0"
                   >
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
+                    <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                       {m.full_name[0]?.toUpperCase()}
                     </div>
                     <div>
@@ -191,7 +192,7 @@ export function MembersPage() {
             <button
               onClick={addAdmin}
               disabled={!selectedMember || addAdminLoading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
+              className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
             >
               {addAdminLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
               Make Admin
@@ -214,7 +215,7 @@ export function MembersPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name or phone…"
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500"
         />
       </div>
 
@@ -240,7 +241,7 @@ export function MembersPage() {
                 <tr key={member.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
+                      <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                         {member.full_name[0]?.toUpperCase()}
                       </div>
                       <div>
@@ -281,7 +282,7 @@ export function MembersPage() {
                       value={member.membership_status}
                       onChange={e => updateMember(member.id, { membership_status: e.target.value } as any)}
                       disabled={saving === member.id}
-                      className={`text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 ${
+                      className={`text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500 ${
                         member.membership_status === 'active'
                           ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                           : member.membership_status === 'pending'
@@ -297,25 +298,40 @@ export function MembersPage() {
 
                   <td className="px-4 py-4">
                     {saving === member.id ? (
-                      <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
-                    ) : isCurrentAdmin ? (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          <Shield className="w-3 h-3" />
-                          {adminRoles.find(a => a.user_id === member.id)?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                        </span>
-                        {!isSelf && isAdmin && (
-                          <button
-                            onClick={() => removeAdmin(member.id)}
-                            className="p-1 rounded text-zinc-600 hover:text-red-400 transition-colors"
-                            title="Remove admin"
-                          >
-                            <ShieldOff className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
+                      <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
                     ) : (
-                      <span className="text-xs text-zinc-600">Member</span>
+                      <div className="flex flex-col gap-1.5">
+                        {isCurrentAdmin && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-violet-300 bg-violet-600/10 border border-violet-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              {adminRoles.find(a => a.user_id === member.id)?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                            </span>
+                            {!isSelf && isAdmin && (
+                              <button
+                                onClick={() => removeAdmin(member.id)}
+                                className="p-1 rounded text-zinc-600 hover:text-red-400 transition-colors"
+                                title="Remove admin"
+                              >
+                                <ShieldOff className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {/* Staff / door-check toggle */}
+                        <button
+                          onClick={() => updateMember(member.id, { is_staff: !member.is_staff } as any)}
+                          title={member.is_staff ? 'Revoke staff portal access' : 'Grant staff portal access'}
+                          className={`flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all ${
+                            member.is_staff
+                              ? 'text-amber-300 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20'
+                              : 'text-zinc-600 border-zinc-800 hover:border-zinc-700 hover:text-zinc-400'
+                          }`}
+                        >
+                          <BellRing className="w-3 h-3" />
+                          {member.is_staff ? 'Staff' : 'Member'}
+                        </button>
+                      </div>
                     )}
                   </td>
 

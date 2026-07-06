@@ -82,7 +82,7 @@ export function BookingsPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+          <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
         </div>
       ) : bookings.length === 0 ? (
         <div className="text-center py-16 bg-zinc-900 border border-zinc-800 rounded-2xl">

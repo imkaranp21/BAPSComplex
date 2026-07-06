@@ -8,7 +8,7 @@ interface Announcement {
   id: string; title: string; body: string; expires_at: string | null; created_at: string;
 }
 
-const fieldClass = 'w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+const fieldClass = 'w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500';
 const labelClass = 'text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em] block mb-1.5';
 
 export function AnnouncementsPage() {
@@ -62,8 +62,8 @@ export function AnnouncementsPage() {
         {/* Create form */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center justify-center">
-              <Plus className="w-3.5 h-3.5 text-orange-500" />
+            <div className="w-7 h-7 bg-violet-600/10 border border-violet-500/20 rounded-lg flex items-center justify-center">
+              <Plus className="w-3.5 h-3.5 text-violet-400" />
             </div>
             <h2 className="font-black text-white text-sm tracking-tight">New Announcement</h2>
           </div>
@@ -90,7 +90,7 @@ export function AnnouncementsPage() {
             <button
               onClick={create}
               disabled={submitting || !title.trim() || !body.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40"
+              className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
               {submitting ? 'Sending…' : 'Send Announcement'}
@@ -103,7 +103,7 @@ export function AnnouncementsPage() {
           <h2 className="font-black text-white text-sm tracking-tight mb-4">All Announcements</h2>
 
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-violet-400 animate-spin" /></div>
           ) : announcements.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
               <Megaphone className="w-7 h-7 text-zinc-700 mx-auto mb-2" />

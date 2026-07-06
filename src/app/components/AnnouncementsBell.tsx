@@ -51,7 +51,7 @@ export function AnnouncementsBell() {
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-orange-500 text-black text-[9px] font-black rounded-full flex items-center justify-center px-0.5 leading-none">
+          <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-violet-600 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5 leading-none">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -77,8 +77,8 @@ export function AnnouncementsBell() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Megaphone className="w-4 h-4 text-orange-500" />
+                  <div className="w-8 h-8 bg-violet-600/10 border border-violet-500/20 rounded-lg flex items-center justify-center">
+                    <Megaphone className="w-4 h-4 text-violet-400" />
                   </div>
                   <h2 className="font-black text-white text-base tracking-tight">Announcements</h2>
                 </div>
@@ -107,7 +107,7 @@ export function AnnouncementsBell() {
                       className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-8 h-8 bg-violet-600 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
                           <Megaphone className="w-4 h-4 text-black" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -116,7 +116,7 @@ export function AnnouncementsBell() {
                           <p className="text-zinc-600 text-[10px] tracking-wide mt-2.5">
                             {format(parseISO(a.created_at), 'MMM d, yyyy')}
                             {a.expires_at && (
-                              <span className="ml-2 text-orange-500/70">
+                              <span className="ml-2 text-violet-400/70">
                                 · Until {format(parseISO(a.expires_at), 'MMM d, h:mm a')}
                               </span>
                             )}

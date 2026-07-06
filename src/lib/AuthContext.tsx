@@ -9,6 +9,7 @@ export interface UserProfile {
   membership_tier: 1 | 2 | null;
   membership_status: 'active' | 'pending' | 'suspended';
   avatar_url: string | null;
+  is_staff: boolean;
   created_at: string;
 }
 
@@ -17,10 +18,11 @@ interface AuthState {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isStaff: boolean;
   isRecovery: boolean;
   clearRecovery: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation: boolean; userId: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -31,17 +33,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
 
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, phone, membership_tier, membership_status, avatar_url, created_at')
+      .select('id, full_name, phone, membership_tier, membership_status, avatar_url, is_staff, created_at')
       .eq('id', userId)
       .single();
 
-    setProfile(data as UserProfile | null);
+    const p = data as UserProfile | null;
+    setProfile(p);
+    setIsStaff(!!(p?.is_staff));
 
     // is_admin() is SECURITY DEFINER so it can bypass RLS
     const { data: adminResult } = await (supabase as any).rpc('is_admin');
@@ -70,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setIsStaff(false);
         setIsRecovery(false);
       }
     });
@@ -102,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const needsConfirmation = !error && !!data.user && !data.session;
-    return { error: error as Error | null, needsConfirmation };
+    return { error: error as Error | null, needsConfirmation, userId: data.user?.id ?? null };
   }
 
   async function signOut() {
@@ -112,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function clearRecovery() { setIsRecovery(false); }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isRecovery, clearRecovery, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isStaff, isRecovery, clearRecovery, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

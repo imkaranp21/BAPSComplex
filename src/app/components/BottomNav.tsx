@@ -27,12 +27,12 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               className="flex-1 relative flex flex-col items-center gap-1.5 py-3.5 transition-colors"
             >
               {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-orange-500 rounded-b-full" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-violet-600 rounded-b-full" />
               )}
-              <span className={active ? 'text-orange-500' : 'text-zinc-600'}>
+              <span className={active ? 'text-violet-400' : 'text-zinc-600'}>
                 {tab.icon}
               </span>
-              <span className={`text-[9px] font-bold tracking-[0.12em] uppercase ${active ? 'text-orange-500' : 'text-zinc-600'}`}>
+              <span className={`text-[9px] font-bold tracking-[0.12em] uppercase ${active ? 'text-violet-400' : 'text-zinc-600'}`}>
                 {tab.label}
               </span>
             </button>

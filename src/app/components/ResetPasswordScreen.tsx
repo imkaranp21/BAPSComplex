@@ -8,7 +8,7 @@ interface ResetPasswordScreenProps {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors';
+  'w-full px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors';
 
 export function ResetPasswordScreen({ onDone }: ResetPasswordScreenProps) {
   const [password, setPassword] = useState('');
@@ -44,7 +44,7 @@ export function ResetPasswordScreen({ onDone }: ResetPasswordScreenProps) {
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-xl mb-5">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-violet-600 rounded-xl mb-5">
             <span className="text-black text-xl font-black">Y</span>
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">Set new password</h1>
@@ -70,7 +70,7 @@ export function ResetPasswordScreen({ onDone }: ResetPasswordScreenProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             {submitting ? 'Updating…' : 'Update Password'}

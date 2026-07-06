@@ -84,7 +84,7 @@ export function GymPage() {
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <Users className="w-4 h-4 text-orange-500" />
+            <Users className="w-4 h-4 text-violet-400" />
             <span className="font-black text-white text-sm tracking-tight">Currently Inside</span>
           </div>
           <span className="text-3xl font-black text-white tracking-tight">
@@ -102,7 +102,7 @@ export function GymPage() {
         <button
           onClick={() => setShowCheckIn(v => !v)}
           disabled={activeCount >= GYM_CAPACITY}
-          className="mt-5 flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-40 text-sm"
+          className="mt-5 flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-40 text-sm"
         >
           <UserCheck className="w-4 h-4" />
           Check In Member
@@ -115,7 +115,7 @@ export function GymPage() {
               value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
               placeholder="Type name or phone…"
-              className="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 mb-2"
+              className="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 mb-2"
               autoFocus
             />
             <div className="max-h-48 overflow-y-auto rounded-xl border border-zinc-800 divide-y divide-zinc-800">
@@ -131,14 +131,14 @@ export function GymPage() {
                     disabled={checkingIn}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-700 transition-colors text-left"
                   >
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
+                    <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                       {m.full_name[0]?.toUpperCase()}
                     </div>
                     <div>
                       <p className="font-bold text-white text-sm">{m.full_name}</p>
                       {m.phone && <p className="text-zinc-500 text-xs">{m.phone}</p>}
                     </div>
-                    {checkingIn && <Loader2 className="w-4 h-4 animate-spin text-orange-500 ml-auto" />}
+                    {checkingIn && <Loader2 className="w-4 h-4 animate-spin text-violet-400 ml-auto" />}
                   </button>
                 ))
               )}
@@ -155,7 +155,7 @@ export function GymPage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+            <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           </div>
         ) : activeCount === 0 ? (
           <div className="text-center py-12 text-zinc-600">
@@ -166,7 +166,7 @@ export function GymPage() {
           checkins.map(c => (
             <div key={c.id} className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 last:border-0 hover:bg-zinc-800/30 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
+                <div className="w-9 h-9 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                   {(c.profiles?.full_name ?? '?')[0].toUpperCase()}
                 </div>
                 <div>

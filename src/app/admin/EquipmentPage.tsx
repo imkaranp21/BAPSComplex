@@ -17,7 +17,7 @@ interface EquipmentItem { id: string; name: string; total_quantity: number; out:
 interface Loan { id: string; equipment_id: string; equipment_name: string; member_id: string | null; member_name: string; quantity: number; lent_at: string; notes: string | null }
 interface Member { id: string; full_name: string; phone: string | null; membership_status: string }
 
-const modalFieldClass = 'w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+const modalFieldClass = 'w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500';
 const modalLabelClass = 'text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em] block mb-1.5';
 
 export function EquipmentPage() {
@@ -161,7 +161,7 @@ export function EquipmentPage() {
             onClick={() => setActiveSpace(s.slug)}
             className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all border ${
               activeSpace === s.slug
-                ? 'bg-orange-500 text-black border-orange-500'
+                ? 'bg-violet-600 text-white border-violet-500'
                 : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700 hover:text-white'
             }`}
           >
@@ -171,26 +171,26 @@ export function EquipmentPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 text-orange-500 animate-spin" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 text-violet-400 animate-spin" /></div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Inventory */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-black text-white text-sm tracking-tight">Inventory</h2>
-              <button onClick={openAdd} className="flex items-center gap-1.5 text-xs font-bold bg-orange-500 hover:bg-orange-400 text-black px-3 py-1.5 rounded-lg transition-colors tracking-wide">
+              <button onClick={openAdd} className="flex items-center gap-1.5 text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors tracking-wide">
                 <Plus className="w-3.5 h-3.5" />
                 Add Item
               </button>
             </div>
 
             {spaceLoading ? (
-              <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
+              <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-violet-400 animate-spin" /></div>
             ) : equipment.length === 0 ? (
               <div className="bg-zinc-900 border border-dashed border-zinc-700 rounded-xl p-8 text-center">
                 <Package className="w-7 h-7 text-zinc-700 mx-auto mb-2" />
                 <p className="text-zinc-600 text-sm">No equipment added yet.</p>
-                <button onClick={openAdd} className="text-orange-500 text-sm font-bold mt-1 hover:text-orange-400">Add your first item</button>
+                <button onClick={openAdd} className="text-violet-400 text-sm font-bold mt-1 hover:text-violet-300">Add your first item</button>
               </div>
             ) : (
               <div className="space-y-2">
@@ -206,7 +206,7 @@ export function EquipmentPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg text-zinc-600 hover:text-orange-400 hover:bg-orange-500/10 transition-all" title="Edit">
+                        <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg text-zinc-600 hover:text-violet-300 hover:bg-violet-600/10 transition-all" title="Edit">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
@@ -220,7 +220,7 @@ export function EquipmentPage() {
                         <button
                           onClick={() => openIssue(item)}
                           disabled={available === 0}
-                          className="ml-1 flex items-center gap-1 text-xs font-bold bg-orange-500 hover:bg-orange-400 text-black px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
+                          className="ml-1 flex items-center gap-1 text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
                         >
                           <ArrowLeftRight className="w-3 h-3" />
                           Issue
@@ -238,7 +238,7 @@ export function EquipmentPage() {
             <h2 className="font-black text-white text-sm tracking-tight mb-3">
               Currently Out
               {loans.length > 0 && (
-                <span className="ml-2 text-[10px] font-black bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full">{loans.length}</span>
+                <span className="ml-2 text-[10px] font-black bg-violet-600/10 text-violet-300 border border-violet-500/20 px-2 py-0.5 rounded-full">{loans.length}</span>
               )}
             </h2>
             {loans.length === 0 ? (
@@ -308,7 +308,7 @@ export function EquipmentPage() {
               </div>
               {itemError && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">{itemError}</p>}
               <button onClick={saveItem} disabled={savingItem}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40">
                 {savingItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 {savingItem ? 'Saving…' : itemModal.mode === 'add' ? 'Add to Inventory' : 'Save Changes'}
               </button>
@@ -336,7 +336,7 @@ export function EquipmentPage() {
               <div>
                 <label className={modalLabelClass}>Member</label>
                 {selectedMember ? (
-                  <div className="flex items-center justify-between bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3">
+                  <div className="flex items-center justify-between bg-violet-600/10 border border-violet-500/30 rounded-xl px-4 py-3">
                     <div>
                       <p className="font-bold text-white text-sm">{selectedMember.full_name}</p>
                       {selectedMember.phone && <p className="text-zinc-500 text-xs">{selectedMember.phone}</p>}
@@ -353,7 +353,7 @@ export function EquipmentPage() {
                       onChange={e => { setMemberSearch(e.target.value); setShowDropdown(true); }}
                       onFocus={() => setShowDropdown(true)}
                       placeholder="Search by name or phone…"
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                     {showDropdown && memberResults.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl z-10 overflow-hidden max-h-48 overflow-y-auto">
@@ -363,7 +363,7 @@ export function EquipmentPage() {
                             onClick={() => { setSelectedMember(m); setShowDropdown(false); setMemberSearch(''); }}
                             className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800 transition-colors text-left border-b border-zinc-800 last:border-0"
                           >
-                            <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
+                            <div className="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                               {m.full_name[0]?.toUpperCase()}
                             </div>
                             <div>
@@ -404,7 +404,7 @@ export function EquipmentPage() {
               {issueError && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">{issueError}</p>}
 
               <button onClick={issueLoan} disabled={!selectedMember || issuing}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40">
                 {issuing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowLeftRight className="w-4 h-4" />}
                 {issuing ? 'Issuing…' : selectedMember ? `Issue to ${selectedMember.full_name}` : 'Select a member first'}
               </button>

@@ -4,6 +4,7 @@ import { AuthProvider } from "./lib/AuthContext";
 import { isMissingConfig } from "./lib/supabase";
 import App from "./app/App.tsx";
 import { AdminApp } from "./app/admin/AdminApp.tsx";
+import { SecurityApp } from "./app/security/SecurityApp.tsx";
 import "./styles/index.css";
 
 const root = createRoot(document.getElementById("root")!);
@@ -46,6 +47,7 @@ if (isMissingConfig) {
       <BrowserRouter>
         <Routes>
           <Route path="/admin/*" element={<AdminApp />} />
+          <Route path="/security/*" element={<SecurityApp />} />
           <Route path="/*" element={<App />} />
         </Routes>
       </BrowserRouter>

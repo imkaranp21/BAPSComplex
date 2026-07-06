@@ -17,7 +17,7 @@ const TIME_OPTIONS = Array.from({ length: 16 }, (_, i) => {
   return { value: `${String(h).padStart(2, '0')}:00:00`, label };
 });
 
-const fieldClass = 'w-full px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+const fieldClass = 'w-full px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500';
 const labelClass = 'block text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em] mb-1.5';
 
 export function ClosuresPage() {
@@ -92,7 +92,7 @@ export function ClosuresPage() {
         </div>
         <button
           onClick={() => { setShowForm(v => !v); setError(''); }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
+          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Closure
@@ -122,7 +122,7 @@ export function ClosuresPage() {
             </div>
             <div className="md:col-span-2">
               <label className="flex items-center gap-3 cursor-pointer" onClick={() => setAllDay(v => !v)}>
-                <div className={`w-10 h-5.5 rounded-full transition-colors relative flex items-center ${allDay ? 'bg-orange-500' : 'bg-zinc-700'}`} style={{ height: '22px' }}>
+                <div className={`w-10 h-5.5 rounded-full transition-colors relative flex items-center ${allDay ? 'bg-violet-600' : 'bg-zinc-700'}`} style={{ height: '22px' }}>
                   <div className={`absolute w-4 h-4 bg-white rounded-full shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>
                 <span className="text-sm font-bold text-zinc-400">All day</span>
@@ -152,7 +152,7 @@ export function ClosuresPage() {
             <button
               onClick={addClosure}
               disabled={saving || !spaceId || !date}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
+              className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarOff className="w-4 h-4" />}
               {saving ? 'Saving…' : 'Block Space'}
@@ -174,7 +174,7 @@ export function ClosuresPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
+          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-violet-400 animate-spin" /></div>
         ) : closures.length === 0 ? (
           <div className="text-center py-12 text-zinc-600">
             <CalendarOff className="w-7 h-7 mx-auto mb-2 opacity-40" />

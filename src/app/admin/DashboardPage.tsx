@@ -60,7 +60,7 @@ export function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -85,7 +85,7 @@ export function DashboardPage() {
       {/* Gym occupancy */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <Dumbbell className="w-4 h-4 text-orange-500" />
+          <Dumbbell className="w-4 h-4 text-violet-400" />
           <h2 className="font-black text-white text-sm tracking-tight">Gym Live Occupancy</h2>
         </div>
         <div className="flex items-end gap-3 mb-4">
@@ -138,7 +138,7 @@ function StatCard({ icon, label, value, accent }: {
     zinc:    'bg-zinc-800 text-zinc-400',
     emerald: 'bg-emerald-500/10 text-emerald-400',
     amber:   'bg-amber-500/10 text-amber-400',
-    orange:  'bg-orange-500/10 text-orange-400',
+    orange:  'bg-violet-600/10 text-violet-300',
   };
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">

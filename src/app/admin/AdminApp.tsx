@@ -17,7 +17,7 @@ export function AdminApp() {
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function AdminApp() {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="bg-orange-500 hover:bg-orange-400 text-black font-bold px-6 py-3 rounded-xl transition-colors"
+            className="bg-violet-600 hover:bg-violet-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
           >
             Go to App
           </button>
@@ -61,7 +61,7 @@ export function AdminApp() {
       <aside className="w-56 bg-zinc-950 border-r border-zinc-800 flex flex-col fixed h-full z-30">
         <div className="px-4 py-5 border-b border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-black" />
             </div>
             <div>
@@ -80,7 +80,7 @@ export function AdminApp() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all ${
                   isActive
-                    ? 'bg-orange-500 text-black'
+                    ? 'bg-violet-600 text-white'
                     : 'text-zinc-500 hover:bg-zinc-900 hover:text-white'
                 }`
               }

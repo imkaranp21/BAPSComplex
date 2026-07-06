@@ -215,7 +215,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                         onClick={() => setSelectedUnitId(unit.id)}
                         className={`py-3 px-4 rounded-xl border font-black text-sm uppercase tracking-tight transition-all ${
                           selectedUnitId === unit.id
-                            ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                            ? 'border-violet-500 bg-violet-600/10 text-violet-300'
                             : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-200'
                         }`}
                       >
@@ -236,12 +236,12 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                       onClick={() => setSelectedDate(d.value)}
                       className={`py-4 px-2 rounded-xl border transition-all text-center ${
                         selectedDate === d.value
-                          ? 'border-orange-500 bg-orange-500/10'
+                          ? 'border-violet-500 bg-violet-600/10'
                           : 'border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className={`font-black text-sm uppercase tracking-tight ${selectedDate === d.value ? 'text-orange-400' : 'text-zinc-300'}`}>{d.label}</div>
-                      <div className={`text-xs mt-0.5 font-medium ${selectedDate === d.value ? 'text-orange-500/70' : 'text-zinc-600'}`}>{d.sublabel}</div>
+                      <div className={`font-black text-sm uppercase tracking-tight ${selectedDate === d.value ? 'text-violet-300' : 'text-zinc-300'}`}>{d.label}</div>
+                      <div className={`text-xs mt-0.5 font-medium ${selectedDate === d.value ? 'text-violet-400/70' : 'text-zinc-600'}`}>{d.sublabel}</div>
                     </button>
                   ))}
                 </div>
@@ -252,7 +252,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase">Time</p>
-                    {loadingSlots && <Loader2 className="w-3.5 h-3.5 text-orange-500 animate-spin" />}
+                    {loadingSlots && <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" />}
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {TIME_SLOTS.map(slot => {
@@ -275,12 +275,12 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                               : closed
                               ? 'border-red-900/30 bg-red-500/5 text-red-900 cursor-not-allowed'
                               : mine
-                              ? 'border-orange-900/40 bg-orange-500/5 text-orange-900 cursor-not-allowed'
+                              ? 'border-violet-900/40 bg-violet-600/5 text-violet-900 cursor-not-allowed'
                               : taken
                               ? 'border-zinc-800/50 bg-transparent text-zinc-800 cursor-not-allowed'
                               : selected
-                              ? 'border-orange-500 bg-orange-500 text-black'
-                              : 'border-zinc-800 text-zinc-400 hover:border-orange-500/50 hover:text-white'
+                              ? 'border-violet-500 bg-violet-600 text-white'
+                              : 'border-zinc-800 text-zinc-400 hover:border-violet-500/50 hover:text-white'
                           }`}
                         >
                           {slot.label}
@@ -291,7 +291,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                   <div className="flex flex-wrap gap-4 mt-3.5">
                     {[
                       { color: 'bg-zinc-800/50 border-zinc-800/50', label: 'Taken', textClass: 'text-zinc-600' },
-                      { color: 'bg-orange-500/5 border-orange-900/40', label: 'Yours', textClass: 'text-zinc-600' },
+                      { color: 'bg-violet-600/5 border-violet-900/40', label: 'Yours', textClass: 'text-zinc-600' },
                       { color: 'bg-red-500/5 border-red-900/30', label: 'Closed', textClass: 'text-zinc-600' },
                     ].map(({ color, label, textClass }) => (
                       <span key={label} className={`flex items-center gap-1.5 text-[10px] ${textClass} tracking-wide`}>
@@ -312,7 +312,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               <button
                 onClick={handleConfirm}
                 disabled={!canConfirm}
-                className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="group w-full flex items-center justify-between bg-violet-600 hover:bg-violet-500 text-white font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <span className="flex items-center gap-2.5">
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}

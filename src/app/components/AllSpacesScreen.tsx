@@ -51,9 +51,9 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
 
         {/* Activity filter chip */}
         {activeFilter && activeFilter !== 'All activities' && (
-          <div className="mb-5 inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[10px] px-3 py-1.5 rounded-full font-black tracking-[0.2em] uppercase">
+          <div className="mb-5 inline-flex items-center gap-2 bg-violet-600/10 border border-violet-500/30 text-violet-300 text-[10px] px-3 py-1.5 rounded-full font-black tracking-[0.2em] uppercase">
             <span>{activeFilter}</span>
-            <button onClick={onClearFilter} className="text-orange-400 hover:text-orange-200 text-sm leading-none ml-1">×</button>
+            <button onClick={onClearFilter} className="text-violet-300 hover:text-violet-200 text-sm leading-none ml-1">×</button>
           </div>
         )}
 
@@ -65,7 +65,7 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
               onClick={() => setFilterMode(mode)}
               className={`px-4 py-1.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all rounded-full ${
                 filterMode === mode
-                  ? 'bg-orange-500 text-black'
+                  ? 'bg-violet-600 text-white'
                   : 'bg-zinc-900 border border-zinc-800 text-zinc-600 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
@@ -80,7 +80,7 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
         {filteredSpaces.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-zinc-600 text-sm">No spaces found{activeFilter ? ` for "${activeFilter}"` : ''}.</p>
-            <button onClick={onClearFilter} className="mt-3 text-orange-500 hover:text-orange-400 text-sm font-bold">Clear filter</button>
+            <button onClick={onClearFilter} className="mt-3 text-violet-400 hover:text-violet-300 text-sm font-bold">Clear filter</button>
           </div>
         ) : (
           filteredSpaces.map((space, i) => {
