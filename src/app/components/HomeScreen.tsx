@@ -102,7 +102,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
           </div>
           <div className="flex items-center justify-between mt-3">
             <p className="text-zinc-600 text-xs">{gymTotal - gymCount} spots remaining</p>
-            <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
           </div>
         </motion.button>
       )}
