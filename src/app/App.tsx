@@ -137,21 +137,25 @@ export default function App() {
       {showNav && (
         <div className="md:hidden flex items-center justify-between px-5 h-14 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
           <div className="flex items-center gap-2.5">
-            {logoError ? (
-              <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center shrink-0">
-                <span className="text-white font-black text-xs leading-none">Y</span>
-              </div>
-            ) : (
-              <TransparentLogo
-                src="/baps-logo.png"
-                className="w-7 h-7 object-contain shrink-0"
-                fallback={
-                  <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center shrink-0">
-                    <span className="text-white font-black text-xs leading-none">Y</span>
-                  </div>
-                }
-              />
-            )}
+            <div className="relative flex items-center justify-center shrink-0 w-7 h-7">
+              <div className="absolute w-10 h-10 rounded-full bg-white/15 blur-md" />
+              <div className="absolute w-7 h-7 rounded-full bg-violet-500/20 blur-sm" />
+              {logoError ? (
+                <div className="relative w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center">
+                  <span className="text-white font-black text-xs leading-none">Y</span>
+                </div>
+              ) : (
+                <TransparentLogo
+                  src="/baps-logo.png"
+                  className="relative w-7 h-7 object-contain"
+                  fallback={
+                    <div className="relative w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center">
+                      <span className="text-white font-black text-xs leading-none">Y</span>
+                    </div>
+                  }
+                />
+              )}
+            </div>
             <span className="text-white font-black text-sm tracking-tight">YOGI SPORTS</span>
           </div>
           <AnnouncementsBell />
