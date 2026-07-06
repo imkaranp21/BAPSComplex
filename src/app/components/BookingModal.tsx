@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, CheckCircle, Loader2 } from 'lucide-react';
+import { X, Loader2, ArrowRight } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
@@ -8,10 +8,10 @@ import type { SpaceType } from '../App';
 import { getSpace, SPACE_CONFLICTS } from '../data/spaces';
 
 function formatHour(h: number) {
-  if (h === 0) return '12 AM';
-  if (h < 12) return `${h} AM`;
-  if (h === 12) return '12 PM';
-  return `${h - 12} PM`;
+  if (h === 0) return '12AM';
+  if (h < 12) return `${h}AM`;
+  if (h === 12) return '12PM';
+  return `${h - 12}PM`;
 }
 
 const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => {
@@ -54,7 +54,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     const d = addDays(new Date(), i);
     return {
       value: format(d, 'yyyy-MM-dd'),
-      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : format(d, 'EEE d MMM'),
+      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : format(d, 'EEE'),
       sublabel: format(d, 'MMM d'),
     };
   });
@@ -143,7 +143,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
       setSubmitting(false);
     } else {
       setStep('success');
-      setTimeout(onBooked, 2200);
+      setTimeout(onBooked, 2400);
     }
   }
 
@@ -152,7 +152,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
 
       <motion.div
         initial={{ y: '100%', opacity: 0 }}
@@ -162,45 +162,61 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
         className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-t-3xl md:rounded-3xl max-h-[92vh] overflow-y-auto"
       >
         {step === 'success' ? (
-          <div className="p-12 text-center">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}>
-              <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-5" />
+          <div className="p-10 text-center">
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', delay: 0.1, stiffness: 200 }}
+              className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-7"
+            >
+              <span className="text-4xl text-emerald-500 font-black leading-none">✓</span>
             </motion.div>
-            <h2 className="text-2xl font-black text-white tracking-tight mb-2">Booking Confirmed</h2>
-            <p className="text-zinc-500 text-sm leading-relaxed">
-              {spaceData.name}
-              {selectedUnitName ? ` · ${selectedUnitName}` : ''}
-              {' · '}{format(new Date(selectedDate), 'EEE, MMM d')}
-              {' · '}{selectedSlot?.label} – {selectedSlot?.endLabel}
-            </p>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none mb-1">Confirmed</h2>
+              <p className="text-zinc-600 text-[10px] font-black tracking-[0.3em] uppercase mb-5">Booking placed</p>
+              <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-left space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-600 text-xs">Space</span>
+                  <span className="text-white font-black text-sm uppercase">{spaceData.name}{selectedUnitName ? ` · ${selectedUnitName}` : ''}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-600 text-xs">Date</span>
+                  <span className="text-white font-black text-sm">{format(new Date(selectedDate), 'EEE, MMM d')}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-600 text-xs">Time</span>
+                  <span className="text-white font-black text-sm">{selectedSlot?.label} – {selectedSlot?.endLabel}</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-zinc-800 sticky top-0 bg-zinc-900 rounded-t-3xl md:rounded-t-3xl z-10">
+            <div className="flex items-start justify-between p-6 pb-4 sticky top-0 bg-zinc-900 border-b border-zinc-800 rounded-t-3xl z-10">
               <div>
-                <h2 className="text-base font-black text-white tracking-tight">Book {spaceData.name}</h2>
-                <p className="text-xs text-zinc-600 mt-0.5 tracking-wide">1-hour slots · up to 2 days ahead</p>
+                <p className="text-zinc-600 text-[10px] font-black tracking-[0.3em] uppercase mb-1">Book a Slot</p>
+                <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{spaceData.name}</h2>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-xl transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-xl transition-colors mt-0.5">
                 <X className="w-5 h-5 text-zinc-500" />
               </button>
             </div>
 
-            <div className="p-5 space-y-6 pb-8">
+            <div className="p-6 space-y-7 pb-8">
               {/* Unit selector */}
               {spaceData.units && dbUnits.length > 0 && (
                 <div>
-                  <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Select Table</p>
+                  <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase mb-3">Select Table</p>
                   <div className="grid grid-cols-2 gap-2">
                     {dbUnits.map(unit => (
                       <button
                         key={unit.id}
                         onClick={() => setSelectedUnitId(unit.id)}
-                        className={`py-3 px-4 rounded-xl border font-semibold text-sm transition-all ${
+                        className={`py-3 px-4 rounded-xl border font-black text-sm uppercase tracking-tight transition-all ${
                           selectedUnitId === unit.id
                             ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                            : 'border-zinc-800 bg-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                            : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-200'
                         }`}
                       >
                         {unit.name}
@@ -212,20 +228,20 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
 
               {/* Date selector */}
               <div>
-                <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Select Date</p>
+                <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase mb-3">Date</p>
                 <div className="grid grid-cols-3 gap-2">
                   {dates.map(d => (
                     <button
                       key={d.value}
                       onClick={() => setSelectedDate(d.value)}
-                      className={`py-3 px-2 rounded-xl border transition-all text-center ${
+                      className={`py-4 px-2 rounded-xl border transition-all text-center ${
                         selectedDate === d.value
-                          ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                          : 'border-zinc-800 bg-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="font-bold text-sm">{d.label}</div>
-                      <div className={`text-xs mt-0.5 ${selectedDate === d.value ? 'text-orange-500/70' : 'text-zinc-600'}`}>{d.sublabel}</div>
+                      <div className={`font-black text-sm uppercase tracking-tight ${selectedDate === d.value ? 'text-orange-400' : 'text-zinc-300'}`}>{d.label}</div>
+                      <div className={`text-xs mt-0.5 font-medium ${selectedDate === d.value ? 'text-orange-500/70' : 'text-zinc-600'}`}>{d.sublabel}</div>
                     </button>
                   ))}
                 </div>
@@ -235,8 +251,8 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               {selectedDate && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase">Select Time</p>
-                    {loadingSlots && <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />}
+                    <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase">Time</p>
+                    {loadingSlots && <Loader2 className="w-3.5 h-3.5 text-orange-500 animate-spin" />}
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {TIME_SLOTS.map(slot => {
@@ -253,18 +269,18 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                           onClick={() => !blocked && setSelectedSlot(slot)}
                           disabled={blocked || loadingSlots}
                           title={closed ? 'Space is closed' : mine ? 'Your booking' : undefined}
-                          className={`py-2.5 px-1 rounded-xl border text-[11px] font-semibold transition-all ${
+                          className={`py-2.5 px-1 rounded-xl border text-[11px] font-black uppercase tracking-tight transition-all ${
                             past
-                              ? 'border-zinc-800 bg-transparent text-zinc-700 cursor-not-allowed line-through'
+                              ? 'border-zinc-800/50 bg-transparent text-zinc-800 cursor-not-allowed line-through'
                               : closed
-                              ? 'border-red-900/30 bg-red-500/5 text-red-800 cursor-not-allowed'
+                              ? 'border-red-900/30 bg-red-500/5 text-red-900 cursor-not-allowed'
                               : mine
-                              ? 'border-orange-900/30 bg-orange-500/5 text-orange-800 cursor-not-allowed'
+                              ? 'border-orange-900/40 bg-orange-500/5 text-orange-900 cursor-not-allowed'
                               : taken
-                              ? 'border-zinc-800 bg-transparent text-zinc-700 cursor-not-allowed line-through'
+                              ? 'border-zinc-800/50 bg-transparent text-zinc-800 cursor-not-allowed'
                               : selected
                               ? 'border-orange-500 bg-orange-500 text-black'
-                              : 'border-zinc-800 bg-zinc-800/50 text-zinc-300 hover:border-orange-500/50 hover:text-white'
+                              : 'border-zinc-800 text-zinc-400 hover:border-orange-500/50 hover:text-white'
                           }`}
                         >
                           {slot.label}
@@ -272,19 +288,17 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                       );
                     })}
                   </div>
-                  <div className="flex flex-wrap gap-4 mt-3">
-                    <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 tracking-wide">
-                      <span className="w-2.5 h-2.5 rounded bg-zinc-800 border border-zinc-700 inline-block" />
-                      Taken
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[10px] text-orange-800 tracking-wide">
-                      <span className="w-2.5 h-2.5 rounded bg-orange-500/10 border border-orange-900/30 inline-block" />
-                      Yours
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[10px] text-red-800 tracking-wide">
-                      <span className="w-2.5 h-2.5 rounded bg-red-500/5 border border-red-900/30 inline-block" />
-                      Closed
-                    </span>
+                  <div className="flex flex-wrap gap-4 mt-3.5">
+                    {[
+                      { color: 'bg-zinc-800/50 border-zinc-800/50', label: 'Taken', textClass: 'text-zinc-600' },
+                      { color: 'bg-orange-500/5 border-orange-900/40', label: 'Yours', textClass: 'text-zinc-600' },
+                      { color: 'bg-red-500/5 border-red-900/30', label: 'Closed', textClass: 'text-zinc-600' },
+                    ].map(({ color, label, textClass }) => (
+                      <span key={label} className={`flex items-center gap-1.5 text-[10px] ${textClass} tracking-wide`}>
+                        <span className={`w-2.5 h-2.5 rounded border inline-block ${color}`} />
+                        {label}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
@@ -298,10 +312,13 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               <button
                 onClick={handleConfirm}
                 disabled={!canConfirm}
-                className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {submitting ? 'Confirming…' : 'Confirm Booking'}
+                <span className="flex items-center gap-2.5">
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span className="text-sm tracking-widest uppercase">{submitting ? 'Confirming…' : 'Confirm Booking'}</span>
+                </span>
+                {!submitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
               </button>
             </div>
           </>

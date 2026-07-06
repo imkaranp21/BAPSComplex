@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Home, Grid3x3, CalendarCheck, User } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { AnnouncementsBell } from './AnnouncementsBell';
@@ -8,6 +9,8 @@ interface TopNavProps {
 }
 
 export function TopNav({ activeTab, onTabChange }: TopNavProps) {
+  const [logoError, setLogoError] = useState(false);
+
   const tabs: { id: NavTab; label: string; icon: React.ReactNode }[] = [
     { id: 'home',     label: 'Home',     icon: <Home className="w-4 h-4" /> },
     { id: 'spaces',   label: 'Spaces',   icon: <Grid3x3 className="w-4 h-4" /> },
@@ -19,7 +22,13 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
     <nav className="hidden md:flex items-center justify-between px-8 h-16 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
       {/* Brand */}
       <div className="flex items-center gap-3">
-        <img src="/baps-logo.png" alt="BAPS" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+        {logoError ? (
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-black font-black text-sm leading-none">Y</span>
+          </div>
+        ) : (
+          <img src="/baps-logo.png" alt="BAPS" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)' }} onError={() => setLogoError(true)} />
+        )}
         <div>
           <span className="text-white font-black text-base tracking-tight">YOGI SPORTS</span>
           <span className="text-zinc-600 text-xs font-medium ml-2 tracking-widest uppercase hidden lg:inline">Nakuru</span>

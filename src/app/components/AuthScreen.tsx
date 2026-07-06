@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -13,8 +13,8 @@ interface AuthScreenProps {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors';
-const labelClass = 'block text-xs font-bold text-zinc-500 tracking-widest uppercase mb-2';
+  'w-full px-4 py-3.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm';
+const labelClass = 'block text-[10px] font-black text-zinc-600 tracking-[0.25em] uppercase mb-2';
 
 export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScreenProps) {
   const [mode, setMode] = useState<Mode>(defaultMode);
@@ -73,16 +73,30 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
     }
   }
 
-  // Shared info-screen layout for confirmation / reset-sent
-  function InfoScreen({ title, body }: { title: string; body: React.ReactNode }) {
+  function InfoScreen({ icon, title, subtitle, emailShown, cta, ctaAction }: {
+    icon: React.ReactNode;
+    title: string;
+    subtitle: string;
+    emailShown?: string;
+    cta: string;
+    ctaAction: () => void;
+  }) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl mb-8">
-            <Mail className="w-7 h-7 text-orange-500" />
+          <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-8">
+            {icon}
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight mb-3">{title}</h2>
-          {body}
+          <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none mb-3">{title}</h2>
+          <p className="text-zinc-500 text-sm mb-1">{subtitle}</p>
+          {emailShown && <p className="font-black text-white text-sm mb-7">{emailShown}</p>}
+          <button
+            onClick={ctaAction}
+            className="w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors"
+          >
+            <span className="text-sm tracking-widest uppercase">{cta}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </motion.div>
       </div>
     );
@@ -91,22 +105,12 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   if (awaitingConfirmation) {
     return (
       <InfoScreen
-        title="Check your email"
-        body={
-          <>
-            <p className="text-zinc-500 text-sm mb-1">We sent a confirmation link to</p>
-            <p className="font-bold text-white mb-6">{email}</p>
-            <p className="text-zinc-600 text-xs mb-8 leading-relaxed">
-              Click the link in the email to verify your account, then come back to sign in.
-            </p>
-            <button
-              onClick={() => { switchMode('login'); setAwaitingConfirmation(false); }}
-              className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors"
-            >
-              Back to Sign In
-            </button>
-          </>
-        }
+        icon={<Mail className="w-9 h-9 text-orange-500" />}
+        title="Check Email"
+        subtitle={`We sent a confirmation link to`}
+        emailShown={email}
+        cta="Back to Sign In"
+        ctaAction={() => { switchMode('login'); setAwaitingConfirmation(false); }}
       />
     );
   }
@@ -114,22 +118,12 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
   if (resetSent) {
     return (
       <InfoScreen
-        title="Reset link sent"
-        body={
-          <>
-            <p className="text-zinc-500 text-sm mb-1">We sent a password reset link to</p>
-            <p className="font-bold text-white mb-6">{email}</p>
-            <p className="text-zinc-600 text-xs mb-8 leading-relaxed">
-              Check your inbox and click the link to set a new password.
-            </p>
-            <button
-              onClick={() => { switchMode('login'); setResetSent(false); }}
-              className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors"
-            >
-              Back to Sign In
-            </button>
-          </>
-        }
+        icon={<Mail className="w-9 h-9 text-orange-500" />}
+        title="Link Sent"
+        subtitle={`Password reset sent to`}
+        emailShown={email}
+        cta="Back to Sign In"
+        ctaAction={() => { switchMode('login'); setResetSent(false); }}
       />
     );
   }
@@ -140,7 +134,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
         <div className="p-5">
           <button
             onClick={mode === 'forgot' ? () => switchMode('login') : onBack}
-            className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+            className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-white hover:border-zinc-700 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -155,12 +149,14 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
           className="w-full max-w-sm"
         >
           {/* Brand */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-xl mb-5">
-              <span className="text-black text-xl font-black">Y</span>
+          <div className="mb-10">
+            <div className="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mb-6">
+              <span className="text-black text-2xl font-black leading-none">Y</span>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Yogi Sports Complex</h1>
-            <p className="text-zinc-600 text-xs mt-1.5 tracking-widest uppercase">Nakuru, Kenya</p>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">
+              {mode === 'forgot' ? 'Reset\nPassword' : mode === 'signup' ? 'Create\nAccount' : 'Welcome\nBack'}
+            </h1>
+            <p className="text-zinc-600 text-[10px] font-black tracking-[0.3em] uppercase mt-2">Yogi Sports Complex · Nakuru</p>
           </div>
 
           {/* Mode toggle */}
@@ -168,7 +164,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
             <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-8">
               <button
                 onClick={() => switchMode('login')}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all ${
+                className={`flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] uppercase transition-all ${
                   mode === 'login' ? 'bg-zinc-700 text-white' : 'text-zinc-600 hover:text-zinc-400'
                 }`}
               >
@@ -176,7 +172,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
               </button>
               <button
                 onClick={() => switchMode('signup')}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all ${
+                className={`flex-1 py-3 rounded-lg text-[10px] font-black tracking-[0.2em] uppercase transition-all ${
                   mode === 'signup' ? 'bg-zinc-700 text-white' : 'text-zinc-600 hover:text-zinc-400'
                 }`}
               >
@@ -186,10 +182,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
           )}
 
           {mode === 'forgot' && (
-            <div className="mb-8">
-              <h2 className="text-xl font-black text-white tracking-tight">Forgot password?</h2>
-              <p className="text-zinc-500 text-sm mt-1.5">Enter your email and we'll send you a reset link.</p>
-            </div>
+            <p className="text-zinc-500 text-sm mb-8 leading-relaxed">Enter your email and we'll send a reset link.</p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -215,7 +208,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
                     placeholder="Middle" className={inputClass} autoComplete="additional-name" />
                 </div>
                 <div>
-                  <label className={labelClass}>Phone Number</label>
+                  <label className={labelClass}>Phone</label>
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                     placeholder="+254 700 000 000" className={inputClass} autoComplete="tel" required />
                 </div>
@@ -234,7 +227,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
                   <label className={labelClass}>Password</label>
                   {mode === 'login' && (
                     <button type="button" onClick={() => switchMode('forgot')}
-                      className="text-[10px] text-orange-500 hover:text-orange-400 font-bold tracking-widest uppercase">
+                      className="text-[10px] text-orange-500 hover:text-orange-400 font-black tracking-[0.2em] uppercase">
                       Forgot?
                     </button>
                   )}
@@ -254,18 +247,24 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors disabled:opacity-40 mt-2"
+              className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-5 px-6 rounded-2xl transition-colors disabled:opacity-40 mt-2"
             >
-              {submitting ? 'Please wait…'
-                : mode === 'login' ? 'Sign In'
-                : mode === 'signup' ? 'Create Account'
-                : 'Send Reset Link'}
+              <span className="flex items-center gap-2.5">
+                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span className="text-sm tracking-widest uppercase">
+                  {submitting ? 'Please wait…'
+                    : mode === 'login' ? 'Sign In'
+                    : mode === 'signup' ? 'Create Account'
+                    : 'Send Reset Link'}
+                </span>
+              </span>
+              {!submitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
             </button>
           </form>
 
           {mode === 'forgot' && (
             <button onClick={() => switchMode('login')}
-              className="w-full text-center text-xs text-zinc-600 hover:text-zinc-400 mt-5 tracking-widest uppercase font-bold transition-colors">
+              className="w-full text-center text-[10px] text-zinc-700 hover:text-zinc-500 mt-6 tracking-[0.25em] uppercase font-black transition-colors">
               Back to Sign In
             </button>
           )}

@@ -29,6 +29,7 @@ export default function App() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPendingNotice, setShowPendingNotice] = useState(false);
   const [authReturnScreen, setAuthReturnScreen] = useState<Screen>('home');
+  const [logoError, setLogoError] = useState(false);
 
   // Don't render until auth state is resolved
   if (loading) {
@@ -135,7 +136,13 @@ export default function App() {
       {showNav && (
         <div className="md:hidden flex items-center justify-between px-5 h-14 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
           <div className="flex items-center gap-2.5">
-            <img src="/baps-logo.png" alt="BAPS" className="w-7 h-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            {logoError ? (
+              <div className="w-7 h-7 bg-orange-500 rounded-md flex items-center justify-center shrink-0">
+                <span className="text-black font-black text-xs leading-none">Y</span>
+              </div>
+            ) : (
+              <img src="/baps-logo.png" alt="BAPS" className="w-7 h-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} onError={() => setLogoError(true)} />
+            )}
             <span className="text-white font-black text-sm tracking-tight">YOGI SPORTS</span>
           </div>
           <AnnouncementsBell />
