@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Orange rounded square background -->
+  <rect width="32" height="32" rx="7" fill="#EA580C"/>
+  <!-- Bold Y drawn as paths for crisp rendering at any size -->
+  <path d="M7 6 L16 17.5 M25 6 L16 17.5 M16 17.5 L16 27"
+        stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
