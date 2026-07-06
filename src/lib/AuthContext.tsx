@@ -38,11 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isRecovery, setIsRecovery] = useState(false);
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
+    let { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, phone, membership_tier, membership_status, avatar_url, is_staff, created_at')
       .eq('id', userId)
       .single();
+
+    // is_staff column may not exist yet — fall back without it
+    if (error) {
+      const res = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, membership_tier, membership_status, avatar_url, created_at')
+        .eq('id', userId)
+        .single();
+      data = res.data ? { ...res.data, is_staff: false } : null;
+    }
 
     const p = data as UserProfile | null;
     setProfile(p);

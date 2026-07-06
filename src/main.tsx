@@ -47,7 +47,7 @@ if (isMissingConfig) {
       <BrowserRouter>
         <Routes>
           <Route path="/admin/*" element={<AdminApp />} />
-          <Route path="/security/*" element={<SecurityApp />} />
+          <Route path="/staff/*" element={<SecurityApp />} />
           <Route path="/*" element={<App />} />
         </Routes>
       </BrowserRouter>
