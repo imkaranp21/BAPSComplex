@@ -19,6 +19,11 @@ interface TodayBooking {
   profiles: { full_name: string } | null;
 }
 
+function formatTime(t: string) {
+  const h = parseInt(t.split(':')[0]);
+  return h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+}
+
 export function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
@@ -35,9 +40,7 @@ export function DashboardPage() {
         (supabase as any)
           .from('bookings')
           .select('id, start_time, end_time, spaces(name), profiles(full_name)')
-          .eq('date', today)
-          .eq('status', 'confirmed')
-          .order('start_time'),
+          .eq('date', today).eq('status', 'confirmed').order('start_time'),
       ]);
 
       const members = membersRes.data ?? [];
@@ -54,95 +57,66 @@ export function DashboardPage() {
     load();
   }, []);
 
-  function formatTime(t: string) {
-    const h = parseInt(t.split(':')[0]);
-    const label = h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
-    return label;
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
+  const gymPct = ((stats?.gymOccupancy ?? 0) / 30) * 100;
+
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-stone-900">Dashboard</h1>
-        <p className="text-stone-500 text-sm mt-1">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')}
-        </p>
+        <h1 className="text-2xl font-black text-white tracking-tight">Dashboard</h1>
+        <p className="text-zinc-500 text-sm mt-1">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          icon={<Users className="w-5 h-5" />}
-          label="Total Members"
-          value={stats?.totalMembers ?? 0}
-          color="blue"
-        />
-        <StatCard
-          icon={<Users className="w-5 h-5" />}
-          label="Active Members"
-          value={stats?.activeMembers ?? 0}
-          color="green"
-        />
-        <StatCard
-          icon={<Clock className="w-5 h-5" />}
-          label="Pending Approval"
-          value={stats?.pendingMembers ?? 0}
-          color="amber"
-        />
-        <StatCard
-          icon={<CalendarCheck className="w-5 h-5" />}
-          label="Today's Bookings"
-          value={stats?.todayBookings ?? 0}
-          color="orange"
-        />
+        <StatCard icon={<Users className="w-4 h-4" />} label="Total Members" value={stats?.totalMembers ?? 0} accent="zinc" />
+        <StatCard icon={<Users className="w-4 h-4" />} label="Active Members" value={stats?.activeMembers ?? 0} accent="emerald" />
+        <StatCard icon={<Clock className="w-4 h-4" />} label="Pending Approval" value={stats?.pendingMembers ?? 0} accent="amber" />
+        <StatCard icon={<CalendarCheck className="w-4 h-4" />} label="Today's Bookings" value={stats?.todayBookings ?? 0} accent="orange" />
       </div>
 
       {/* Gym occupancy */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-6 mb-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Dumbbell className="w-5 h-5 text-orange-600" />
-          <h2 className="font-semibold text-stone-900">Gym Live Occupancy</h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+        <div className="flex items-center gap-2.5 mb-4">
+          <Dumbbell className="w-4 h-4 text-orange-500" />
+          <h2 className="font-black text-white text-sm tracking-tight">Gym Live Occupancy</h2>
         </div>
-        <div className="flex items-end gap-4">
-          <span className="text-4xl font-bold text-stone-900">{stats?.gymOccupancy}</span>
-          <span className="text-stone-400 text-lg pb-1">/ 30 people</span>
+        <div className="flex items-end gap-3 mb-4">
+          <span className="text-4xl font-black text-white tracking-tight">{stats?.gymOccupancy}</span>
+          <span className="text-zinc-600 text-base pb-1 font-medium">/ 30 people</span>
         </div>
-        <div className="mt-3 w-full bg-stone-100 rounded-full h-3">
+        <div className="w-full bg-zinc-800 rounded-full h-2">
           <div
-            className={`h-3 rounded-full transition-all ${
+            className={`h-2 rounded-full transition-all duration-700 ${
               (stats?.gymOccupancy ?? 0) > 24 ? 'bg-red-500' :
-              (stats?.gymOccupancy ?? 0) > 15 ? 'bg-orange-500' : 'bg-green-500'
+              (stats?.gymOccupancy ?? 0) > 15 ? 'bg-amber-500' : 'bg-emerald-500'
             }`}
-            style={{ width: `${((stats?.gymOccupancy ?? 0) / 30) * 100}%` }}
+            style={{ width: `${Math.max(2, gymPct)}%` }}
           />
         </div>
       </div>
 
       {/* Today's bookings list */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="font-semibold text-stone-900 mb-4">Today's Schedule</h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+        <h2 className="font-black text-white text-sm tracking-tight mb-5">Today's Schedule</h2>
         {todayBookings.length === 0 ? (
-          <p className="text-stone-400 text-sm">No bookings today.</p>
+          <p className="text-zinc-600 text-sm">No bookings today.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-0">
             {todayBookings.map(b => (
-              <div
-                key={b.id}
-                className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0"
-              >
+              <div key={b.id} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0">
                 <div>
-                  <p className="font-medium text-stone-900 text-sm">{b.profiles?.full_name ?? 'Unknown'}</p>
-                  <p className="text-stone-400 text-xs">{b.spaces?.name}</p>
+                  <p className="font-bold text-white text-sm">{b.profiles?.full_name ?? 'Unknown'}</p>
+                  <p className="text-zinc-600 text-xs mt-0.5">{b.spaces?.name}</p>
                 </div>
-                <span className="text-xs font-medium text-stone-600 bg-stone-100 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 bg-zinc-800 border border-zinc-700 px-2.5 py-1 rounded-full">
                   {formatTime(b.start_time)} – {formatTime(b.end_time)}
                 </span>
               </div>
@@ -154,28 +128,25 @@ export function DashboardPage() {
   );
 }
 
-function StatCard({
-  icon, label, value, color,
-}: {
+function StatCard({ icon, label, value, accent }: {
   icon: React.ReactNode;
   label: string;
   value: number;
-  color: 'blue' | 'green' | 'amber' | 'orange';
+  accent: 'zinc' | 'emerald' | 'amber' | 'orange';
 }) {
-  const colorMap = {
-    blue:   'bg-blue-50 text-blue-600',
-    green:  'bg-green-50 text-green-600',
-    amber:  'bg-amber-50 text-amber-600',
-    orange: 'bg-orange-50 text-orange-600',
+  const accentMap = {
+    zinc:    'bg-zinc-800 text-zinc-400',
+    emerald: 'bg-emerald-500/10 text-emerald-400',
+    amber:   'bg-amber-500/10 text-amber-400',
+    orange:  'bg-orange-500/10 text-orange-400',
   };
-
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-      <div className={`inline-flex p-2.5 rounded-xl mb-3 ${colorMap[color]}`}>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+      <div className={`inline-flex p-2.5 rounded-xl mb-3 ${accentMap[accent]}`}>
         {icon}
       </div>
-      <div className="text-2xl font-bold text-stone-900">{value}</div>
-      <div className="text-xs text-stone-500 mt-0.5">{label}</div>
+      <div className="text-2xl font-black text-white tracking-tight">{value}</div>
+      <div className="text-[10px] text-zinc-600 mt-0.5 tracking-widest uppercase font-bold">{label}</div>
     </div>
   );
 }

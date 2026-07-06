@@ -5,12 +5,11 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 
 interface Announcement {
-  id: string;
-  title: string;
-  body: string;
-  expires_at: string | null;
-  created_at: string;
+  id: string; title: string; body: string; expires_at: string | null; created_at: string;
 }
+
+const fieldClass = 'w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+const labelClass = 'text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em] block mb-1.5';
 
 export function AnnouncementsPage() {
   const { user } = useAuth();
@@ -18,7 +17,6 @@ export function AnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
@@ -27,10 +25,8 @@ export function AnnouncementsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await (supabase as any)
-      .from('announcements')
-      .select('id, title, body, expires_at, created_at')
-      .order('created_at', { ascending: false });
+    const { data } = await (supabase as any).from('announcements')
+      .select('id, title, body, expires_at, created_at').order('created_at', { ascending: false });
     setAnnouncements((data as Announcement[]) ?? []);
     setLoading(false);
   }
@@ -39,14 +35,9 @@ export function AnnouncementsPage() {
     if (!title.trim() || !body.trim()) return;
     setSubmitting(true);
     await (supabase as any).from('announcements').insert({
-      title: title.trim(),
-      body: body.trim(),
-      expires_at: expiresAt || null,
-      created_by: user!.id,
+      title: title.trim(), body: body.trim(), expires_at: expiresAt || null, created_by: user!.id,
     });
-    setTitle('');
-    setBody('');
-    setExpiresAt('');
+    setTitle(''); setBody(''); setExpiresAt('');
     await load();
     setSubmitting(false);
   }
@@ -63,57 +54,43 @@ export function AnnouncementsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-stone-900">Announcements</h1>
-        <p className="text-stone-500 text-sm mt-1">Send notices to all members. They see these via the bell icon in the app.</p>
+        <h1 className="text-2xl font-black text-white tracking-tight">Announcements</h1>
+        <p className="text-zinc-500 text-sm mt-1">Send notices to all members via the bell icon in the app.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Create form */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-5">
-            <Plus className="w-4 h-4 text-orange-600" />
-            <h2 className="font-semibold text-stone-900">New Announcement</h2>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-7 h-7 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center justify-center">
+              <Plus className="w-3.5 h-3.5 text-orange-500" />
+            </div>
+            <h2 className="font-black text-white text-sm tracking-tight">New Announcement</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Title</label>
-              <input
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. Court maintenance on Saturday"
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <label className={labelClass}>Title</label>
+              <input value={title} onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Court maintenance on Saturday" className={fieldClass} />
             </div>
-
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">Message</label>
-              <textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                placeholder="Write your announcement here…"
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-              />
+              <label className={labelClass}>Message</label>
+              <textarea value={body} onChange={e => setBody(e.target.value)}
+                placeholder="Write your announcement here…" rows={4}
+                className={`${fieldClass} resize-none`} />
             </div>
-
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-1.5">
-                Expires At <span className="font-normal normal-case text-stone-400">(optional — hides automatically after this date & time)</span>
+              <label className={labelClass}>
+                Expires At <span className="text-zinc-700 normal-case font-normal tracking-normal">(optional)</span>
               </label>
-              <input
-                type="datetime-local"
-                value={expiresAt}
-                min={nowLocal}
-                onChange={e => setExpiresAt(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <input type="datetime-local" value={expiresAt} min={nowLocal}
+                onChange={e => setExpiresAt(e.target.value)} className={fieldClass} />
             </div>
-
             <button
               onClick={create}
               disabled={submitting || !title.trim() || !body.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-40"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
               {submitting ? 'Sending…' : 'Send Announcement'}
@@ -123,16 +100,14 @@ export function AnnouncementsPage() {
 
         {/* Existing announcements */}
         <div>
-          <h2 className="font-semibold text-stone-900 mb-4">Active Announcements</h2>
+          <h2 className="font-black text-white text-sm tracking-tight mb-4">All Announcements</h2>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-5 h-5 text-orange-600 animate-spin" />
-            </div>
+            <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
           ) : announcements.length === 0 ? (
-            <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center shadow-sm">
-              <Megaphone className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-              <p className="text-stone-400 text-sm">No announcements yet</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+              <Megaphone className="w-7 h-7 text-zinc-700 mx-auto mb-2" />
+              <p className="text-zinc-600 text-sm">No announcements yet</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -141,17 +116,17 @@ export function AnnouncementsPage() {
                 return (
                   <div
                     key={a.id}
-                    className={`bg-white border rounded-xl p-4 shadow-sm flex gap-4 ${expired ? 'opacity-50 border-stone-100' : 'border-stone-200'}`}
+                    className={`bg-zinc-900 border rounded-xl p-4 flex gap-4 ${expired ? 'opacity-40 border-zinc-800' : 'border-zinc-800 hover:border-zinc-700'} transition-all`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <p className="font-semibold text-stone-900 text-sm">{a.title}</p>
+                        <p className="font-bold text-white text-sm">{a.title}</p>
                         {expired && (
-                          <span className="text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-50 px-1.5 py-0.5 rounded">Expired</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">Expired</span>
                         )}
                       </div>
-                      <p className="text-stone-600 text-sm leading-relaxed">{a.body}</p>
-                      <p className="text-stone-400 text-xs mt-2">
+                      <p className="text-zinc-400 text-sm leading-relaxed">{a.body}</p>
+                      <p className="text-zinc-600 text-xs mt-2">
                         Posted {format(parseISO(a.created_at), 'MMM d, yyyy')}
                         {a.expires_at && ` · Expires ${format(parseISO(a.expires_at), 'MMM d, yyyy · h:mm a')}`}
                       </p>
@@ -159,12 +134,9 @@ export function AnnouncementsPage() {
                     <button
                       onClick={() => remove(a.id)}
                       disabled={deletingId === a.id}
-                      className="shrink-0 p-2 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                      className="shrink-0 p-2 rounded-lg text-zinc-700 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-40"
                     >
-                      {deletingId === a.id
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <Trash2 className="w-4 h-4" />
-                      }
+                      {deletingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </button>
                   </div>
                 );

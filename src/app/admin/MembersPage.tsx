@@ -15,10 +15,9 @@ interface Member {
   email?: string;
 }
 
-interface AdminRole {
-  user_id: string;
-  role: string;
-}
+interface AdminRole { user_id: string; role: string }
+
+const selectBase = 'text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-zinc-800 border-zinc-700 text-zinc-300';
 
 export function MembersPage() {
   const { isAdmin, user: currentUser } = useAuth();
@@ -41,8 +40,7 @@ export function MembersPage() {
 
   async function load() {
     const [membersRes, adminsRes] = await Promise.all([
-      (supabase as any)
-        .from('profiles')
+      (supabase as any).from('profiles')
         .select('id, full_name, phone, membership_group, membership_tier, membership_status, created_at')
         .order('created_at', { ascending: false }),
       (supabase as any).from('admin_roles').select('user_id, role'),
@@ -63,18 +61,13 @@ export function MembersPage() {
     if (!selectedMember) return;
     setAddAdminLoading(true);
     setAddAdminError('');
-
     const { error: insertErr } = await (supabase as any)
-      .from('admin_roles')
-      .insert({ user_id: selectedMember.id, role: 'admin', created_by: currentUser?.id });
-
+      .from('admin_roles').insert({ user_id: selectedMember.id, role: 'admin', created_by: currentUser?.id });
     if (insertErr) {
       setAddAdminError(insertErr.message.includes('duplicate') ? 'This member is already an admin.' : insertErr.message);
     } else {
       setAdminRoles(prev => [...prev, { user_id: selectedMember.id, role: 'admin' }]);
-      setSelectedMember(null);
-      setAdminSearch('');
-      setShowAddAdmin(false);
+      setSelectedMember(null); setAdminSearch(''); setShowAddAdmin(false);
     }
     setAddAdminLoading(false);
   }
@@ -84,8 +77,7 @@ export function MembersPage() {
   const adminSearchResults = adminSearch.trim()
     ? members.filter(m =>
         !adminIds.has(m.id) &&
-        (m.full_name.toLowerCase().includes(adminSearch.toLowerCase()) ||
-         (m.phone ?? '').includes(adminSearch))
+        (m.full_name.toLowerCase().includes(adminSearch.toLowerCase()) || (m.phone ?? '').includes(adminSearch))
       ).slice(0, 6)
     : [];
 
@@ -109,14 +101,13 @@ export function MembersPage() {
   }
 
   const filtered = members.filter(m =>
-    m.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    (m.phone ?? '').includes(search)
+    m.full_name.toLowerCase().includes(search.toLowerCase()) || (m.phone ?? '').includes(search)
   );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -125,12 +116,12 @@ export function MembersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Members</h1>
-          <p className="text-stone-500 text-sm mt-1">{members.length} total accounts</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Members</h1>
+          <p className="text-zinc-500 text-sm mt-1">{members.length} total accounts</p>
         </div>
         <button
           onClick={() => setShowAddAdmin(v => !v)}
-          className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-700 transition-colors"
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Add Admin
@@ -139,22 +130,18 @@ export function MembersPage() {
 
       {/* Add admin panel */}
       {showAddAdmin && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-6">
-          <h3 className="font-semibold text-stone-900 mb-1">Promote member to Admin</h3>
-          <p className="text-sm text-stone-500 mb-4">Search by name or phone number.</p>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
+          <h3 className="font-black text-white text-sm mb-1 tracking-tight">Promote member to Admin</h3>
+          <p className="text-xs text-zinc-500 mb-4">Search by name or phone number.</p>
 
           <div className="relative" ref={dropdownRef}>
-            {/* Selected member pill */}
             {selectedMember ? (
-              <div className="flex items-center justify-between bg-white border-2 border-orange-500 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-zinc-800 border border-orange-500/50 rounded-xl px-4 py-3">
                 <div>
-                  <p className="font-medium text-stone-900 text-sm">{selectedMember.full_name}</p>
-                  {selectedMember.phone && <p className="text-stone-400 text-xs">{selectedMember.phone}</p>}
+                  <p className="font-bold text-white text-sm">{selectedMember.full_name}</p>
+                  {selectedMember.phone && <p className="text-zinc-500 text-xs">{selectedMember.phone}</p>}
                 </div>
-                <button
-                  onClick={() => { setSelectedMember(null); setAdminSearch(''); }}
-                  className="text-stone-400 hover:text-stone-600 text-lg leading-none"
-                >×</button>
+                <button onClick={() => { setSelectedMember(null); setAdminSearch(''); }} className="text-zinc-500 hover:text-white text-xl leading-none">×</button>
               </div>
             ) : (
               <input
@@ -162,28 +149,29 @@ export function MembersPage() {
                 onChange={e => { setAdminSearch(e.target.value); setShowDropdown(true); }}
                 onFocus={() => setShowDropdown(true)}
                 placeholder="Type a name or phone number…"
-                className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
               />
             )}
 
-            {/* Dropdown results */}
             {showDropdown && adminSearchResults.length > 0 && !selectedMember && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl z-10 overflow-hidden">
                 {adminSearchResults.map(m => (
                   <button
                     key={m.id}
                     onClick={() => { setSelectedMember(m); setShowDropdown(false); setAdminSearch(''); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left border-b border-stone-50 last:border-0"
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left border-b border-zinc-800 last:border-0"
                   >
-                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold text-orange-700 shrink-0">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                       {m.full_name[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-stone-900 text-sm">{m.full_name}</p>
-                      <p className="text-stone-400 text-xs">{m.phone ?? 'No phone'}</p>
+                      <p className="font-bold text-white text-sm">{m.full_name}</p>
+                      <p className="text-zinc-500 text-xs">{m.phone ?? 'No phone'}</p>
                     </div>
-                    <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
-                      m.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    <span className={`ml-auto text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${
+                      m.membership_status === 'active'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}>
                       {m.membership_status}
                     </span>
@@ -193,7 +181,7 @@ export function MembersPage() {
             )}
 
             {showDropdown && adminSearch.trim() && adminSearchResults.length === 0 && !selectedMember && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-10 px-4 py-3 text-sm text-stone-400">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl z-10 px-4 py-3 text-xs text-zinc-500">
                 No members found matching "{adminSearch}"
               </div>
             )}
@@ -203,47 +191,44 @@ export function MembersPage() {
             <button
               onClick={addAdmin}
               disabled={!selectedMember || addAdminLoading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
             >
               {addAdminLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
               Make Admin
             </button>
             <button
               onClick={() => { setShowAddAdmin(false); setSelectedMember(null); setAdminSearch(''); setAddAdminError(''); }}
-              className="px-4 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-50 transition-colors"
+              className="px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-xl text-xs font-bold hover:text-white transition-colors tracking-wide"
             >
               Cancel
             </button>
           </div>
-
-          {addAdminError && (
-            <p className="text-red-600 text-sm mt-2">{addAdminError}</p>
-          )}
+          {addAdminError && <p className="text-red-400 text-xs mt-2">{addAdminError}</p>}
         </div>
       )}
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name or phone…"
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-stone-100 bg-stone-50">
-              <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Member</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Group</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Tier</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Role</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-wide">Joined</th>
+            <tr className="border-b border-zinc-800">
+              <th className="text-left px-5 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Member</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Group</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Tier</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Status</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Role</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-bold text-zinc-600 uppercase tracking-[0.15em]">Joined</th>
               <th className="px-4 py-3.5" />
             </tr>
           </thead>
@@ -252,26 +237,25 @@ export function MembersPage() {
               const isCurrentAdmin = adminIds.has(member.id);
               const isSelf = member.id === currentUser?.id;
               return (
-                <tr key={member.id} className="border-b border-stone-50 hover:bg-stone-50 transition-colors">
+                <tr key={member.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold text-orange-700">
+                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
                         {member.full_name[0]?.toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-stone-900">{member.full_name}</p>
-                        {member.phone && <p className="text-stone-400 text-xs">{member.phone}</p>}
+                        <p className="font-bold text-white text-sm">{member.full_name}</p>
+                        {member.phone && <p className="text-zinc-600 text-xs">{member.phone}</p>}
                       </div>
                     </div>
                   </td>
 
-                  {/* Membership group */}
                   <td className="px-4 py-4">
                     <select
                       value={member.membership_group ?? ''}
                       onChange={e => updateMember(member.id, { membership_group: e.target.value || null } as any)}
                       disabled={saving === member.id}
-                      className="text-xs border border-stone-200 rounded-lg px-2 py-1.5 bg-white text-stone-700 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className={selectBase}
                     >
                       <option value="">— unset —</option>
                       <option value="satsangi">Satsangi</option>
@@ -279,13 +263,12 @@ export function MembersPage() {
                     </select>
                   </td>
 
-                  {/* Tier */}
                   <td className="px-4 py-4">
                     <select
                       value={member.membership_tier ?? ''}
                       onChange={e => updateMember(member.id, { membership_tier: e.target.value ? Number(e.target.value) : null } as any)}
                       disabled={saving === member.id}
-                      className="text-xs border border-stone-200 rounded-lg px-2 py-1.5 bg-white text-stone-700 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className={selectBase}
                     >
                       <option value="">— unset —</option>
                       <option value="1">Tier 1</option>
@@ -293,7 +276,6 @@ export function MembersPage() {
                     </select>
                   </td>
 
-                  {/* Status */}
                   <td className="px-4 py-4">
                     <select
                       value={member.membership_status}
@@ -301,10 +283,10 @@ export function MembersPage() {
                       disabled={saving === member.id}
                       className={`text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 ${
                         member.membership_status === 'active'
-                          ? 'border-green-200 bg-green-50 text-green-700'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                           : member.membership_status === 'pending'
-                          ? 'border-amber-200 bg-amber-50 text-amber-700'
-                          : 'border-red-200 bg-red-50 text-red-700'
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                          : 'border-red-500/30 bg-red-500/10 text-red-400'
                       }`}
                     >
                       <option value="pending">Pending</option>
@@ -313,20 +295,19 @@ export function MembersPage() {
                     </select>
                   </td>
 
-                  {/* Admin role */}
                   <td className="px-4 py-4">
                     {saving === member.id ? (
-                      <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />
                     ) : isCurrentAdmin ? (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
                           <Shield className="w-3 h-3" />
                           {adminRoles.find(a => a.user_id === member.id)?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                         </span>
                         {!isSelf && isAdmin && (
                           <button
                             onClick={() => removeAdmin(member.id)}
-                            className="p-1 hover:bg-red-50 rounded text-stone-400 hover:text-red-600 transition-colors"
+                            className="p-1 rounded text-zinc-600 hover:text-red-400 transition-colors"
                             title="Remove admin"
                           >
                             <ShieldOff className="w-3.5 h-3.5" />
@@ -334,18 +315,18 @@ export function MembersPage() {
                         )}
                       </div>
                     ) : (
-                      <span className="text-xs text-stone-400">Member</span>
+                      <span className="text-xs text-zinc-600">Member</span>
                     )}
                   </td>
 
-                  <td className="px-4 py-4 text-xs text-stone-400">
+                  <td className="px-4 py-4 text-xs text-zinc-600">
                     {format(new Date(member.created_at), 'MMM d, yyyy')}
                   </td>
                   <td className="px-4 py-4">
                     {!isSelf && (
                       <button
                         onClick={() => setDeleteConfirm(member)}
-                        className="p-1.5 rounded-lg text-stone-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-zinc-700 hover:text-red-400 hover:bg-red-500/10 transition-all"
                         title="Delete member"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -359,7 +340,7 @@ export function MembersPage() {
         </table>
 
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-stone-400">
+          <div className="text-center py-12 text-zinc-600 text-sm">
             No members found{search ? ` for "${search}"` : ''}.
           </div>
         )}
@@ -368,31 +349,29 @@ export function MembersPage() {
       {/* Delete confirmation modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !deleting && setDeleteConfirm(null)} />
-          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !deleting && setDeleteConfirm(null)} />
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
             </div>
-            <h2 className="text-lg font-bold text-stone-900 text-center mb-2">Delete Member?</h2>
-            <p className="text-stone-500 text-sm text-center mb-1">
-              You are about to permanently delete
-            </p>
-            <p className="font-semibold text-stone-900 text-center mb-4">{deleteConfirm.full_name}</p>
-            <p className="text-xs text-stone-400 text-center mb-6 leading-relaxed">
-              This will remove their account, all bookings, and all records from the database. This cannot be undone.
+            <h2 className="text-base font-black text-white tracking-tight mb-2">Delete Member?</h2>
+            <p className="text-zinc-500 text-sm mb-1">You are about to permanently delete</p>
+            <p className="font-bold text-white mb-4">{deleteConfirm.full_name}</p>
+            <p className="text-xs text-zinc-600 mb-6 leading-relaxed">
+              This will remove their account, all bookings, and all records. This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 font-semibold text-sm hover:bg-stone-50 transition-colors disabled:opacity-40"
+                className="flex-1 py-3 rounded-xl border border-zinc-700 text-zinc-400 font-bold text-sm hover:text-white hover:border-zinc-600 transition-all disabled:opacity-40"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteMember}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 {deleting ? 'Deleting…' : 'Delete'}

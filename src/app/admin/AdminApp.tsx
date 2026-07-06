@@ -16,26 +16,26 @@ export function AdminApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-5">
-            <Shield className="w-8 h-8 text-red-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl mb-5">
+            <Shield className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-xl font-bold text-stone-900 mb-2">Access Denied</h1>
-          <p className="text-stone-500 text-sm mb-6">
+          <h1 className="text-xl font-black text-white tracking-tight mb-2">Access Denied</h1>
+          <p className="text-zinc-500 text-sm mb-6">
             {user ? 'Your account does not have admin privileges.' : 'You must be signed in as an admin to access this page.'}
           </p>
           <button
             onClick={() => navigate('/')}
-            className="bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-orange-700 transition-colors"
+            className="bg-orange-500 hover:bg-orange-400 text-black font-bold px-6 py-3 rounded-xl transition-colors"
           >
             Go to App
           </button>
@@ -45,43 +45,43 @@ export function AdminApp() {
   }
 
   const navItems = [
-    { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, end: true },
-    { to: '/admin/members', label: 'Members', icon: <Users className="w-5 h-5" />, end: false },
-    { to: '/admin/bookings', label: 'Bookings', icon: <CalendarDays className="w-5 h-5" />, end: false },
-    { to: '/admin/gym', label: 'Gym', icon: <Dumbbell className="w-5 h-5" />, end: false },
-    { to: '/admin/walk-ins', label: 'Walk-Ins', icon: <Footprints className="w-5 h-5" />, end: false },
-    { to: '/admin/closures', label: 'Closures', icon: <CalendarOff className="w-5 h-5" />, end: false },
-    { to: '/admin/equipment', label: 'Equipment', icon: <Package className="w-5 h-5" />, end: false },
-    { to: '/admin/announcements', label: 'Announcements', icon: <Megaphone className="w-5 h-5" />, end: false },
+    { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, end: true },
+    { to: '/admin/members', label: 'Members', icon: <Users className="w-4 h-4" />, end: false },
+    { to: '/admin/bookings', label: 'Bookings', icon: <CalendarDays className="w-4 h-4" />, end: false },
+    { to: '/admin/gym', label: 'Gym', icon: <Dumbbell className="w-4 h-4" />, end: false },
+    { to: '/admin/walk-ins', label: 'Walk-Ins', icon: <Footprints className="w-4 h-4" />, end: false },
+    { to: '/admin/closures', label: 'Closures', icon: <CalendarOff className="w-4 h-4" />, end: false },
+    { to: '/admin/equipment', label: 'Equipment', icon: <Package className="w-4 h-4" />, end: false },
+    { to: '/admin/announcements', label: 'Announcements', icon: <Megaphone className="w-4 h-4" />, end: false },
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-zinc-950 flex">
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-stone-200 flex flex-col shadow-sm fixed h-full z-30">
-        <div className="p-5 border-b border-stone-100">
+      <aside className="w-56 bg-zinc-950 border-r border-zinc-800 flex flex-col fixed h-full z-30">
+        <div className="px-4 py-5 border-b border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-black" />
             </div>
             <div>
-              <div className="text-sm font-bold text-stone-900">Admin Portal</div>
-              <div className="text-xs text-stone-400">Yogi Sports Complex</div>
+              <div className="text-sm font-black text-white tracking-tight">Admin Portal</div>
+              <div className="text-[10px] text-zinc-600 tracking-widest uppercase">Yogi Sports Complex</div>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto">
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all ${
                   isActive
-                    ? 'bg-orange-600 text-white'
-                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                    ? 'bg-orange-500 text-black'
+                    : 'text-zinc-500 hover:bg-zinc-900 hover:text-white'
                 }`
               }
             >
@@ -91,19 +91,19 @@ export function AdminApp() {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-stone-100">
+        <div className="p-2.5 border-t border-zinc-800">
           <button
             onClick={async () => { await signOut(); navigate('/'); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-600 hover:bg-red-500/10 hover:text-red-400 hover:border hover:border-red-500/20 transition-all tracking-wide"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-60 p-8 overflow-y-auto min-h-screen">
+      <main className="flex-1 ml-56 p-8 overflow-y-auto min-h-screen bg-zinc-950">
         <Routes>
           <Route index element={<DashboardPage />} />
           <Route path="members" element={<MembersPage />} />

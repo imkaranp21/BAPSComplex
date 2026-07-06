@@ -4,20 +4,10 @@ import { format, parseISO } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 
-interface Space {
-  id: string;
-  name: string;
-  slug: string;
-}
-
+interface Space { id: string; name: string; slug: string }
 interface Closure {
-  id: string;
-  space_id: string;
-  date: string;
-  all_day: boolean;
-  start_time: string | null;
-  end_time: string | null;
-  reason: string | null;
+  id: string; space_id: string; date: string; all_day: boolean;
+  start_time: string | null; end_time: string | null; reason: string | null;
   spaces: { name: string } | null;
 }
 
@@ -26,6 +16,9 @@ const TIME_OPTIONS = Array.from({ length: 16 }, (_, i) => {
   const label = h === 12 ? '12:00 PM' : h < 12 ? `${h}:00 AM` : `${h - 12}:00 PM`;
   return { value: `${String(h).padStart(2, '0')}:00:00`, label };
 });
+
+const fieldClass = 'w-full px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+const labelClass = 'block text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em] mb-1.5';
 
 export function ClosuresPage() {
   const { user } = useAuth();
@@ -37,7 +30,6 @@ export function ClosuresPage() {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
 
-  // Form state
   const [spaceId, setSpaceId] = useState('');
   const [date, setDate] = useState('');
   const [allDay, setAllDay] = useState(true);
@@ -51,12 +43,9 @@ export function ClosuresPage() {
     setLoading(true);
     const [spacesRes, closuresRes] = await Promise.all([
       (supabase as any).from('spaces').select('id, name, slug').order('name'),
-      (supabase as any)
-        .from('space_closures')
+      (supabase as any).from('space_closures')
         .select('id, space_id, date, all_day, start_time, end_time, reason, spaces(name)')
-        .gte('date', new Date().toISOString().slice(0, 10))
-        .order('date')
-        .order('start_time'),
+        .gte('date', new Date().toISOString().slice(0, 10)).order('date').order('start_time'),
     ]);
     setSpaces(spacesRes.data ?? []);
     setClosures(closuresRes.data ?? []);
@@ -66,30 +55,15 @@ export function ClosuresPage() {
 
   async function addClosure() {
     if (!spaceId || !date) return;
-    if (!allDay && startTime >= endTime) {
-      setError('End time must be after start time.');
-      return;
-    }
-    setSaving(true);
-    setError('');
+    if (!allDay && startTime >= endTime) { setError('End time must be after start time.'); return; }
+    setSaving(true); setError('');
     const { error: err } = await (supabase as any).from('space_closures').insert({
-      space_id: spaceId,
-      date,
-      all_day: allDay,
-      start_time: allDay ? null : startTime,
-      end_time: allDay ? null : endTime,
-      reason: reason.trim() || null,
-      created_by: user?.id,
+      space_id: spaceId, date, all_day: allDay,
+      start_time: allDay ? null : startTime, end_time: allDay ? null : endTime,
+      reason: reason.trim() || null, created_by: user?.id,
     });
-    if (err) {
-      setError('Failed to add closure. Please try again.');
-    } else {
-      setShowForm(false);
-      setReason('');
-      setDate('');
-      setAllDay(true);
-      await load();
-    }
+    if (err) { setError('Failed to add closure. Please try again.'); }
+    else { setShowForm(false); setReason(''); setDate(''); setAllDay(true); await load(); }
     setSaving(false);
   }
 
@@ -103,10 +77,7 @@ export function ClosuresPage() {
   function formatClosure(c: Closure) {
     const d = format(parseISO(c.date), 'EEE, MMM d yyyy');
     if (c.all_day) return `${d} · All day`;
-    const fmt = (t: string) => {
-      const h = parseInt(t);
-      return h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
-    };
+    const fmt = (t: string) => { const h = parseInt(t); return h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`; };
     return `${d} · ${fmt(c.start_time!)} – ${fmt(c.end_time!)}`;
   }
 
@@ -116,12 +87,12 @@ export function ClosuresPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Space Closures</h1>
-          <p className="text-stone-500 text-sm mt-1">Block spaces for maintenance, events, or any reason</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Space Closures</h1>
+          <p className="text-zinc-500 text-sm mt-1">Block spaces for maintenance, events, or any reason</p>
         </div>
         <button
           onClick={() => { setShowForm(v => !v); setError(''); }}
-          className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-700 transition-colors"
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Closure
@@ -130,81 +101,44 @@ export function ClosuresPage() {
 
       {/* Add form */}
       {showForm && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-6">
-          <h3 className="font-semibold text-stone-900 mb-4">Block a Space</h3>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
+          <h3 className="font-black text-white text-sm mb-5 tracking-tight">Block a Space</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Space */}
             <div>
-              <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">Space</label>
-              <select
-                value={spaceId}
-                onChange={e => setSpaceId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                {spaces.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
+              <label className={labelClass}>Space</label>
+              <select value={spaceId} onChange={e => setSpaceId(e.target.value)} className={fieldClass}>
+                {spaces.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-
-            {/* Date */}
             <div>
-              <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">Date</label>
-              <input
-                type="date"
-                value={date}
-                min={today}
-                onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <label className={labelClass}>Date</label>
+              <input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} className={fieldClass} />
             </div>
-
-            {/* Reason */}
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">Reason (optional)</label>
-              <input
-                type="text"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                placeholder="e.g. Maintenance, Private event, Renovation…"
-                className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              <label className={labelClass}>Reason (optional)</label>
+              <input type="text" value={reason} onChange={e => setReason(e.target.value)}
+                placeholder="e.g. Maintenance, Private event, Renovation…" className={fieldClass} />
             </div>
-
-            {/* All day toggle */}
             <div className="md:col-span-2">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <div
-                  onClick={() => setAllDay(v => !v)}
-                  className={`w-11 h-6 rounded-full transition-colors relative ${allDay ? 'bg-orange-600' : 'bg-stone-300'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${allDay ? 'translate-x-6' : 'translate-x-1'}`} />
+              <label className="flex items-center gap-3 cursor-pointer" onClick={() => setAllDay(v => !v)}>
+                <div className={`w-10 h-5.5 rounded-full transition-colors relative flex items-center ${allDay ? 'bg-orange-500' : 'bg-zinc-700'}`} style={{ height: '22px' }}>
+                  <div className={`absolute w-4 h-4 bg-white rounded-full shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>
-                <span className="text-sm font-medium text-stone-700">All day</span>
+                <span className="text-sm font-bold text-zinc-400">All day</span>
               </label>
             </div>
-
-            {/* Time range */}
             {!allDay && (
               <>
                 <div>
-                  <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">From</label>
-                  <select
-                    value={startTime}
-                    onChange={e => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
+                  <label className={labelClass}>From</label>
+                  <select value={startTime} onChange={e => setStartTime(e.target.value)} className={fieldClass}>
                     {TIME_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">Until</label>
-                  <select
-                    value={endTime}
-                    onChange={e => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
+                  <label className={labelClass}>Until</label>
+                  <select value={endTime} onChange={e => setEndTime(e.target.value)} className={fieldClass}>
                     {TIME_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
@@ -212,20 +146,20 @@ export function ClosuresPage() {
             )}
           </div>
 
-          {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+          {error && <p className="text-red-400 text-xs mt-3">{error}</p>}
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-5">
             <button
               onClick={addClosure}
               disabled={saving || !spaceId || !date}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-xs font-bold disabled:opacity-40 transition-colors tracking-wide"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarOff className="w-4 h-4" />}
               {saving ? 'Saving…' : 'Block Space'}
             </button>
             <button
               onClick={() => { setShowForm(false); setError(''); }}
-              className="px-4 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-50 transition-colors"
+              className="px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-xl text-xs font-bold hover:text-white transition-colors tracking-wide"
             >
               Cancel
             </button>
@@ -234,46 +168,39 @@ export function ClosuresPage() {
       )}
 
       {/* Closures list */}
-      <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-stone-100">
-          <h2 className="font-semibold text-stone-900">Upcoming Closures</h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-zinc-800">
+          <h2 className="font-black text-white text-sm tracking-tight">Upcoming Closures</h2>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-5 h-5 text-orange-600 animate-spin" />
-          </div>
+          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
         ) : closures.length === 0 ? (
-          <div className="text-center py-12 text-stone-400">
+          <div className="text-center py-12 text-zinc-600">
             <CalendarOff className="w-7 h-7 mx-auto mb-2 opacity-40" />
             <p className="text-sm">No closures scheduled</p>
           </div>
         ) : (
-          <div className="divide-y divide-stone-50">
+          <div className="divide-y divide-zinc-800">
             {closures.map(c => (
-              <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-stone-50 transition-colors">
+              <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-zinc-800/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                    <CalendarOff className="w-4 h-4 text-red-600" />
+                  <div className="w-9 h-9 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center shrink-0">
+                    <CalendarOff className="w-4 h-4 text-red-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-stone-900 text-sm">{c.spaces?.name}</p>
-                    <p className="text-stone-500 text-xs">{formatClosure(c)}</p>
-                    {c.reason && (
-                      <p className="text-stone-400 text-xs mt-0.5 italic">"{c.reason}"</p>
-                    )}
+                    <p className="font-bold text-white text-sm">{c.spaces?.name}</p>
+                    <p className="text-zinc-500 text-xs">{formatClosure(c)}</p>
+                    {c.reason && <p className="text-zinc-600 text-xs mt-0.5 italic">"{c.reason}"</p>}
                   </div>
                 </div>
                 <button
                   onClick={() => deleteClosure(c.id)}
                   disabled={deleting === c.id}
-                  className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-zinc-700 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                   title="Remove closure"
                 >
-                  {deleting === c.id
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <Trash2 className="w-4 h-4" />
-                  }
+                  {deleting === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
               </div>
             ))}
