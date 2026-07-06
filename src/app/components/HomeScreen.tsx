@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { RefreshCw, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react';
+import { RefreshCw, ArrowRight, SlidersHorizontal } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { SPACES } from '../data/spaces';
 import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
@@ -115,44 +115,35 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
         </p>
       </div>
 
-      {/* Other spaces — 2-column grid */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
+      {/* Other spaces — full-width list */}
+      <div className="space-y-2 mb-8">
         {otherSpaces.map((space, i) => {
           const av = availability[space.id];
           const statusType = av?.statusType ?? 'open';
           const statusLabel = av?.label ?? 'Open';
+          const stripe = statusType === 'inuse' ? 'bg-red-500' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500';
+          const dot = statusType === 'inuse' ? 'bg-red-500 animate-pulse' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500';
+          const txt = statusType === 'inuse' ? 'text-red-500' : statusType === 'capacity' ? 'text-amber-500' : 'text-emerald-500';
 
           return (
             <motion.button
               key={space.id}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={{ scale: 0.98 }}
+              transition={{ delay: i * 0.04 }}
+              whileTap={{ scale: 0.99 }}
               onClick={() => onSpaceClick(space.id)}
-              className="group bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-4 text-left h-28 flex flex-col justify-between transition-all duration-200 relative overflow-hidden"
+              className="group w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl px-5 py-5 text-left flex items-center gap-4 transition-all duration-200"
             >
-              {/* Top: status */}
-              <div className="flex items-center gap-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  statusType === 'inuse' ? 'bg-red-500' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500'
-                }`} />
-                <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${
-                  statusType === 'inuse' ? 'text-red-500' : statusType === 'capacity' ? 'text-amber-500' : 'text-emerald-500'
-                }`}>
-                  {statusLabel}
-                </span>
+              <div className={`w-0.5 h-10 rounded-full shrink-0 ${stripe}`} />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-black text-white tracking-tighter uppercase leading-none">{space.name}</h3>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+                  <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${txt}`}>{statusLabel}</span>
+                </div>
               </div>
-
-              {/* Bottom: name */}
-              <div>
-                <h3 className="text-sm font-black text-white tracking-tight uppercase leading-tight">
-                  {space.name}
-                </h3>
-              </div>
-
-              {/* Hover arrow */}
-              <ChevronRight className="absolute right-3 bottom-4 w-3.5 h-3.5 text-zinc-800 group-hover:text-zinc-500 transition-colors" />
+              <ArrowRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
             </motion.button>
           );
         })}

@@ -92,6 +92,10 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
             const statusType = av?.statusType ?? 'open';
             const statusLabel = av?.label ?? 'Open';
 
+            const stripe = statusType === 'inuse' ? 'bg-red-500' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500';
+            const dot = statusType === 'inuse' ? 'bg-red-500 animate-pulse' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500';
+            const txt = statusType === 'inuse' ? 'text-red-500' : statusType === 'capacity' ? 'text-amber-500' : 'text-emerald-500';
+
             return (
               <motion.button
                 key={space.id}
@@ -100,45 +104,35 @@ export function AllSpacesScreen({ onBack, onSpaceClick, onFilterClick, activeFil
                 transition={{ delay: i * 0.04 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => onSpaceClick(space.id)}
-                className="group w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-5 text-left transition-all duration-200"
+                className="group w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl px-5 py-5 text-left flex items-center gap-4 transition-all duration-200"
               >
-                <div className="flex items-center justify-between mb-3">
-                  {/* Status */}
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      statusType === 'inuse' ? 'bg-red-500' : statusType === 'capacity' ? 'bg-amber-500' : 'bg-emerald-500'
-                    } ${statusType !== 'inuse' ? '' : 'animate-pulse'}`} />
-                    <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${
-                      statusType === 'inuse' ? 'text-red-500' : statusType === 'capacity' ? 'text-amber-500' : 'text-emerald-500'
-                    }`}>
-                      {statusLabel}
-                    </span>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                <div className={`w-0.5 rounded-full shrink-0 ${stripe} ${isGym ? 'h-14' : 'h-10'}`} />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-black text-white tracking-tighter uppercase leading-none">{space.name}</h3>
+                  {isGym ? (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+                          <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${txt}`}>{statusLabel}</span>
+                        </div>
+                        <span className="text-white font-black text-sm">{gymCount} / {gymTotal}</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1">
+                        <div
+                          className={`h-1 rounded-full ${gymPct > 80 ? 'bg-red-500' : gymPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${Math.max(1, gymPct)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+                      <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${txt}`}>{statusLabel}</span>
+                    </div>
+                  )}
                 </div>
-
-                <h3 className="text-xl font-black text-white tracking-tighter uppercase leading-none">
-                  {space.name}
-                </h3>
-
-                {isGym && (
-                  <div className="mt-4">
-                    <div className="flex items-end justify-between mb-2">
-                      <span className="text-zinc-600 text-xs">Occupancy</span>
-                      <span className="text-white font-black text-sm">{gymCount} / {gymTotal}</span>
-                    </div>
-                    <div className="w-full bg-zinc-800 rounded-full h-1">
-                      <div
-                        className={`h-1 rounded-full ${gymPct > 80 ? 'bg-red-500' : gymPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                        style={{ width: `${Math.max(1, gymPct)}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {!isGym && (
-                  <p className="text-zinc-600 text-xs mt-2">{space.description}</p>
-                )}
+                <ArrowRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
               </motion.button>
             );
           })
