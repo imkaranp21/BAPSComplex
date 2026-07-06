@@ -27,7 +27,9 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
             <span className="text-black font-black text-sm leading-none">Y</span>
           </div>
         ) : (
-          <img src="/baps-logo.png" alt="BAPS" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)' }} onError={() => setLogoError(true)} />
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden p-1 shrink-0">
+            <img src="/baps-logo.png" alt="BAPS" className="w-full h-full object-contain" onError={() => setLogoError(true)} />
+          </div>
         )}
         <div>
           <span className="text-white font-black text-base tracking-tight">YOGI SPORTS</span>

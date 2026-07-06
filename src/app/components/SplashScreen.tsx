@@ -31,13 +31,14 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
               <span className="text-black font-black text-5xl leading-none">Y</span>
             </div>
           ) : (
-            <img
-              src="/baps-logo.png"
-              alt="BAPS"
-              className="w-24 h-24 object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
-              onError={() => setLogoError(true)}
-            />
+            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center overflow-hidden p-2">
+              <img
+                src="/baps-logo.png"
+                alt="BAPS"
+                className="w-full h-full object-contain"
+                onError={() => setLogoError(true)}
+              />
+            </div>
           )}
         </motion.div>
 

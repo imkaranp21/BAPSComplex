@@ -141,7 +141,9 @@ export default function App() {
                 <span className="text-black font-black text-xs leading-none">Y</span>
               </div>
             ) : (
-              <img src="/baps-logo.png" alt="BAPS" className="w-7 h-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} onError={() => setLogoError(true)} />
+              <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center overflow-hidden p-0.5 shrink-0">
+                <img src="/baps-logo.png" alt="BAPS" className="w-full h-full object-contain" onError={() => setLogoError(true)} />
+              </div>
             )}
             <span className="text-white font-black text-sm tracking-tight">YOGI SPORTS</span>
           </div>
