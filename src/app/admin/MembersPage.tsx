@@ -46,7 +46,17 @@ export function MembersPage() {
         .order('created_at', { ascending: false }),
       (supabase as any).from('admin_roles').select('user_id, role'),
     ]);
-    setMembers(membersRes.data ?? []);
+
+    if (membersRes.error) {
+      // is_staff column may not exist yet — fall back without it
+      const { data: fallback } = await (supabase as any).from('profiles')
+        .select('id, full_name, phone, membership_group, membership_tier, membership_status, created_at')
+        .order('created_at', { ascending: false });
+      setMembers((fallback ?? []).map((m: any) => ({ ...m, is_staff: false })));
+    } else {
+      setMembers(membersRes.data ?? []);
+    }
+
     setAdminRoles(adminsRes.data ?? []);
     setLoading(false);
   }
