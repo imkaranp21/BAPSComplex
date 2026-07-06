@@ -32,15 +32,20 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
               <span className="text-black font-black text-5xl leading-none">Y</span>
             </div>
           ) : (
-            <TransparentLogo
-              src="/baps-logo.png"
-              className="w-24 h-24 object-contain"
-              fallback={
-                <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
-                  <span className="text-black font-black text-5xl leading-none">Y</span>
-                </div>
-              }
-            />
+            <div className="relative flex items-center justify-center">
+              {/* White glow so black logo outlines show on dark bg */}
+              <div className="absolute w-32 h-32 rounded-full bg-white/20 blur-2xl" />
+              <div className="absolute w-20 h-20 rounded-full bg-white/30 blur-lg" />
+              <TransparentLogo
+                src="/baps-logo.png"
+                className="relative w-24 h-24 object-contain"
+                fallback={
+                  <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
+                    <span className="text-black font-black text-5xl leading-none">Y</span>
+                  </div>
+                }
+              />
+            </div>
           )}
         </motion.div>
 
