@@ -13,6 +13,7 @@ import { ActivityFilterModal } from './components/ActivityFilterModal';
 import { BottomNav, type NavTab } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { AnnouncementsBell } from './components/AnnouncementsBell';
+import { TransparentLogo } from './components/TransparentLogo';
 import { useAuth } from '../lib/AuthContext';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
@@ -141,9 +142,15 @@ export default function App() {
                 <span className="text-black font-black text-xs leading-none">Y</span>
               </div>
             ) : (
-              <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center overflow-hidden p-0.5 shrink-0">
-                <img src="/baps-logo.png" alt="BAPS" className="w-full h-full object-contain" onError={() => setLogoError(true)} />
-              </div>
+              <TransparentLogo
+                src="/baps-logo.png"
+                className="w-7 h-7 object-contain shrink-0"
+                fallback={
+                  <div className="w-7 h-7 bg-orange-500 rounded-md flex items-center justify-center shrink-0">
+                    <span className="text-black font-black text-xs leading-none">Y</span>
+                  </div>
+                }
+              />
             )}
             <span className="text-white font-black text-sm tracking-tight">YOGI SPORTS</span>
           </div>

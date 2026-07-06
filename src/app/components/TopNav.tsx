@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Home, Grid3x3, CalendarCheck, User } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { AnnouncementsBell } from './AnnouncementsBell';
+import { TransparentLogo } from './TransparentLogo';
 
 interface TopNavProps {
   activeTab: NavTab;
@@ -27,9 +28,15 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
             <span className="text-black font-black text-sm leading-none">Y</span>
           </div>
         ) : (
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden p-1 shrink-0">
-            <img src="/baps-logo.png" alt="BAPS" className="w-full h-full object-contain" onError={() => setLogoError(true)} />
-          </div>
+          <TransparentLogo
+            src="/baps-logo.png"
+            className="w-8 h-8 object-contain shrink-0"
+            fallback={
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-black font-black text-sm leading-none">Y</span>
+              </div>
+            }
+          />
         )}
         <div>
           <span className="text-white font-black text-base tracking-tight">YOGI SPORTS</span>

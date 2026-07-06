@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
+import { TransparentLogo } from './TransparentLogo';
 
 interface SplashScreenProps {
   onGetStarted: () => void;
@@ -31,14 +32,15 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
               <span className="text-black font-black text-5xl leading-none">Y</span>
             </div>
           ) : (
-            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center overflow-hidden p-2">
-              <img
-                src="/baps-logo.png"
-                alt="BAPS"
-                className="w-full h-full object-contain"
-                onError={() => setLogoError(true)}
-              />
-            </div>
+            <TransparentLogo
+              src="/baps-logo.png"
+              className="w-24 h-24 object-contain"
+              fallback={
+                <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
+                  <span className="text-black font-black text-5xl leading-none">Y</span>
+                </div>
+              }
+            />
           )}
         </motion.div>
 
