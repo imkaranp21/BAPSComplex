@@ -33,8 +33,8 @@ export default function App() {
   // Don't render until auth state is resolved
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -124,8 +124,8 @@ export default function App() {
   const showNav = currentScreen !== 'splash' && currentScreen !== 'auth';
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-      <Toaster position="top-center" theme="light" richColors />
+    <div className="min-h-screen bg-zinc-950 flex flex-col">
+      <Toaster position="top-center" theme="dark" richColors />
 
       {showNav && (
         <TopNav activeTab={activeNavTab} onTabChange={handleNavChange} />
@@ -133,8 +133,11 @@ export default function App() {
 
       {/* Mobile header — bell + branding, hidden on desktop where TopNav shows it */}
       {showNav && (
-        <div className="md:hidden flex items-center justify-between px-4 h-12 border-b border-stone-200 bg-white sticky top-0 z-40">
-          <span className="text-base font-bold text-stone-900 tracking-tight">Yogi Sports Complex</span>
+        <div className="md:hidden flex items-center justify-between px-5 h-14 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
+          <div className="flex items-center gap-2.5">
+            <img src="/baps-logo.png" alt="BAPS" className="w-7 h-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            <span className="text-white font-black text-sm tracking-tight">YOGI SPORTS</span>
+          </div>
           <AnnouncementsBell />
         </div>
       )}
@@ -213,32 +216,32 @@ export default function App() {
 
       {showPendingNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPendingNotice(false)} />
-          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowPendingNotice(false)} />
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full text-center">
             {profile?.membership_status === 'suspended' ? (
               <>
-                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-red-600 text-xl font-bold">!</span>
+                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-red-400 text-xl font-black">!</span>
                 </div>
-                <h2 className="text-lg font-bold text-stone-900 mb-2">Account Suspended</h2>
-                <p className="text-stone-500 text-sm mb-5">
+                <h2 className="text-base font-black text-white tracking-tight mb-2">Account Suspended</h2>
+                <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                   Your membership has been suspended. Please contact the complex for more information.
                 </p>
               </>
             ) : (
               <>
-                <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-amber-600 text-xl font-bold">!</span>
+                <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-amber-400 text-xl font-black">!</span>
                 </div>
-                <h2 className="text-lg font-bold text-stone-900 mb-2">Membership Pending</h2>
-                <p className="text-stone-500 text-sm mb-5">
+                <h2 className="text-base font-black text-white tracking-tight mb-2">Membership Pending</h2>
+                <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                   Your account is awaiting approval from an admin. Once your membership is activated, you'll be able to book spaces.
                 </p>
               </>
             )}
             <button
               onClick={() => setShowPendingNotice(false)}
-              className="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl hover:bg-orange-700 transition-colors"
+              className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors"
             >
               Got it
             </button>

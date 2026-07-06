@@ -59,16 +59,16 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
 
   if (!user) {
     return (
-      <div className="bg-[#FFFBF5] pt-6 pb-4">
-        <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-stone-100 rounded-2xl mb-5">
-            <Calendar className="w-8 h-8 text-stone-400" />
+      <div className="bg-zinc-950 min-h-full pt-6 pb-4">
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl mb-5">
+            <Calendar className="w-7 h-7 text-zinc-600" />
           </div>
-          <h2 className="text-xl font-bold text-stone-900 mb-2">Sign in to view bookings</h2>
-          <p className="text-stone-500 text-sm mb-8">Your upcoming and past bookings will appear here.</p>
+          <h2 className="text-xl font-black text-white tracking-tight mb-2">Sign in to view bookings</h2>
+          <p className="text-zinc-600 text-sm mb-8">Your upcoming and past bookings will appear here.</p>
           <button
             onClick={onSignIn}
-            className="bg-orange-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-orange-700 transition-colors"
+            className="bg-orange-500 hover:bg-orange-400 text-black font-bold px-8 py-3.5 rounded-xl transition-colors"
           >
             Sign In
           </button>
@@ -81,52 +81,54 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
   const past = bookings.filter(b => b.status !== 'confirmed' || isPast(parseISO(`${b.date}T${b.end_time}`)));
 
   return (
-    <div className="bg-[#FFFBF5]">
-      <h1 className="text-2xl font-bold text-stone-900 mb-6">My Bookings</h1>
+    <div className="bg-zinc-950 min-h-full">
+      <h1 className="text-2xl font-black text-white tracking-tight mb-6">Bookings</h1>
 
       {/* Upcoming */}
       <section className="mb-8">
-        <h3 className="text-stone-400 text-xs font-semibold tracking-widest uppercase mb-3">
-          Upcoming
-        </h3>
+        <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Upcoming</p>
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 text-orange-600 animate-spin" />
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
           </div>
         ) : upcoming.length === 0 ? (
-          <div className="bg-white border border-stone-200 rounded-xl p-6 text-center shadow-sm">
-            <Calendar className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-            <p className="text-stone-400 text-sm">No upcoming bookings</p>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
+            <Calendar className="w-7 h-7 text-zinc-700 mx-auto mb-2" />
+            <p className="text-zinc-600 text-sm">No upcoming bookings</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {upcoming.map(b => (
+            {upcoming.map((b, i) => (
               <motion.div
                 key={b.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex items-center justify-between"
+                transition={{ delay: i * 0.04 }}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between"
               >
-                <div>
-                  <p className="font-semibold text-stone-900">
-                    {b.spaces?.name}
-                    {b.space_units?.name ? ` · ${b.space_units.name}` : ''}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1 text-stone-500 text-xs">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {format(parseISO(b.date), 'EEE, MMM d')}
-                    </span>
-                    <span className="flex items-center gap-1 text-stone-500 text-xs">
-                      <Clock className="w-3.5 h-3.5" />
-                      {formatTime(b.start_time)} – {formatTime(b.end_time)}
-                    </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-0.5 self-stretch bg-emerald-500 rounded-full shrink-0" />
+                  <div>
+                    <p className="font-bold text-white text-sm">
+                      {b.spaces?.name}
+                      {b.space_units?.name ? <span className="text-zinc-500 font-normal"> · {b.space_units.name}</span> : ''}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="flex items-center gap-1 text-zinc-500 text-xs">
+                        <Calendar className="w-3 h-3" />
+                        {format(parseISO(b.date), 'EEE, MMM d')}
+                      </span>
+                      <span className="flex items-center gap-1 text-zinc-500 text-xs">
+                        <Clock className="w-3 h-3" />
+                        {formatTime(b.start_time)} – {formatTime(b.end_time)}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={() => cancelBooking(b.id)}
                   disabled={cancellingId === b.id}
-                  className="ml-3 p-2 rounded-xl hover:bg-red-50 text-stone-400 hover:text-red-600 transition-colors disabled:opacity-40"
+                  className="ml-3 p-2 rounded-lg border border-zinc-800 text-zinc-600 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all disabled:opacity-30"
                   title="Cancel booking"
                 >
                   {cancellingId === b.id
@@ -143,26 +145,24 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
       {/* Past */}
       {past.length > 0 && (
         <section>
-          <h3 className="text-stone-400 text-xs font-semibold tracking-widest uppercase mb-3">
-            Past
-          </h3>
+          <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Past</p>
           <div className="space-y-2">
             {past.slice(0, 20).map(b => (
               <div
                 key={b.id}
-                className="bg-white border border-stone-100 rounded-xl p-4 flex items-center justify-between opacity-60"
+                className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 flex items-center justify-between opacity-50"
               >
                 <div>
-                  <p className="font-medium text-stone-700 text-sm">
+                  <p className="font-medium text-zinc-300 text-sm">
                     {b.spaces?.name}
                     {b.space_units?.name ? ` · ${b.space_units.name}` : ''}
                   </p>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-stone-400 text-xs">
+                    <span className="text-zinc-600 text-xs">
                       {format(parseISO(b.date), 'MMM d')} · {formatTime(b.start_time)}
                     </span>
                     {b.status === 'cancelled' && (
-                      <span className="text-xs text-red-500 font-medium">Cancelled</span>
+                      <span className="text-[10px] font-bold text-red-600 tracking-widest uppercase">Cancelled</span>
                     )}
                   </div>
                 </div>

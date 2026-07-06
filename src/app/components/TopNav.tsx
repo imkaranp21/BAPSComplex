@@ -16,40 +16,35 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
   ];
 
   return (
-    <nav className="hidden md:flex items-center justify-between px-8 h-16 border-b border-stone-200 bg-white sticky top-0 z-40 shadow-sm">
+    <nav className="hidden md:flex items-center justify-between px-8 h-16 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
+      {/* Brand */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-            <rect x="3" y="3" width="7" height="7" rx="1" fill="white" />
-            <rect x="14" y="3" width="7" height="7" rx="1" fill="white" />
-            <rect x="3" y="14" width="7" height="7" rx="1" fill="white" />
-            <rect x="14" y="14" width="7" height="7" rx="1" fill="white" />
-          </svg>
+        <img src="/baps-logo.png" alt="BAPS" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+        <div>
+          <span className="text-white font-black text-base tracking-tight">YOGI SPORTS</span>
+          <span className="text-zinc-600 text-xs font-medium ml-2 tracking-widest uppercase hidden lg:inline">Nakuru</span>
         </div>
-        <span className="text-xl font-bold text-stone-900 tracking-tight">Yogi Sports Complex</span>
-        <span className="text-sm text-stone-400 font-normal hidden lg:block">Nakuru, Kenya</span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-orange-600 text-white'
-                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="w-px h-6 bg-stone-200 mx-1" />
-        <AnnouncementsBell />
+      {/* Nav tabs */}
+      <div className="flex items-center gap-1">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-200 ${
+              activeTab === tab.id
+                ? 'text-orange-500 border-b-2 border-orange-500 pb-1.5'
+                : 'text-zinc-500 hover:text-zinc-200 border-b-2 border-transparent pb-1.5'
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      <AnnouncementsBell />
     </nav>
   );
 }

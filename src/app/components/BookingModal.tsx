@@ -8,14 +8,14 @@ import type { SpaceType } from '../App';
 import { getSpace, SPACE_CONFLICTS } from '../data/spaces';
 
 function formatHour(h: number) {
-  if (h === 0) return '12:00 AM';
-  if (h < 12) return `${h}:00 AM`;
-  if (h === 12) return '12:00 PM';
-  return `${h - 12}:00 PM`;
+  if (h === 0) return '12 AM';
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return '12 PM';
+  return `${h - 12} PM`;
 }
 
 const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => {
-  const hour = i + 6; // 6 AM to 9 PM (last slot ends at 10 PM)
+  const hour = i + 6;
   return {
     start: `${String(hour).padStart(2, '0')}:00:00`,
     end: `${String(hour + 1).padStart(2, '0')}:00:00`,
@@ -24,17 +24,8 @@ const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => {
   };
 });
 
-interface DbUnit {
-  id: string;
-  name: string;
-}
-
-interface SelectedSlot {
-  start: string;
-  end: string;
-  label: string;
-  endLabel: string;
-}
+interface DbUnit { id: string; name: string }
+interface SelectedSlot { start: string; end: string; label: string; endLabel: string }
 
 interface BookingModalProps {
   space: SpaceType;
@@ -68,23 +59,16 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     };
   });
 
-  // Fetch space ID and units from DB on mount
   useEffect(() => {
     async function init() {
       const { data: spaceRow } = await supabase
-        .from('spaces')
-        .select('id')
-        .eq('slug', space)
-        .single();
+        .from('spaces').select('id').eq('slug', space).single();
       if (spaceRow) {
         setDbSpaceId(spaceRow.id);
         if (spaceData.units) {
           const { data: units } = await supabase
-            .from('space_units')
-            .select('id, name')
-            .eq('space_id', spaceRow.id)
-            .eq('is_active', true)
-            .order('name');
+            .from('space_units').select('id, name')
+            .eq('space_id', spaceRow.id).eq('is_active', true).order('name');
           setDbUnits(units ?? []);
           if (units && units.length > 0) setSelectedUnitId(units[0].id);
         }
@@ -93,7 +77,6 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     init();
   }, [space]);
 
-  // Fetch unavailable slots when date or unit changes
   useEffect(() => {
     if (!selectedDate || !dbSpaceId) return;
     setLoadingSlots(true);
@@ -103,51 +86,31 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
       const conflictSlugs = SPACE_CONFLICTS[space] ?? [];
       const allSlugs = [space, ...conflictSlugs];
 
-      // SECURITY DEFINER RPC — sees all bookings regardless of RLS
       const [blockedRes, myRes, closuresRes] = await Promise.all([
-        (supabase as any).rpc('get_blocked_slots', {
-          p_space_slugs: allSlugs,
-          p_date: selectedDate,
-        }),
-        supabase
-          .from('bookings')
-          .select('start_time, end_time')
-          .eq('date', selectedDate)
-          .eq('status', 'confirmed')
-          .eq('user_id', user!.id),
-        (supabase as any)
-          .from('space_closures')
-          .select('all_day, start_time, end_time')
-          .eq('space_id', dbSpaceId!)
-          .eq('date', selectedDate),
+        (supabase as any).rpc('get_blocked_slots', { p_space_slugs: allSlugs, p_date: selectedDate }),
+        supabase.from('bookings').select('start_time, end_time')
+          .eq('date', selectedDate).eq('status', 'confirmed').eq('user_id', user!.id),
+        (supabase as any).from('space_closures').select('all_day, start_time, end_time')
+          .eq('space_id', dbSpaceId!).eq('date', selectedDate),
       ]);
 
       const blocked = new Set<string>();
       (blockedRes.data ?? []).forEach((b: any) => {
-        TIME_SLOTS.forEach(slot => {
-          if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start);
-        });
+        TIME_SLOTS.forEach(slot => { if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start); });
       });
       setUnavailableSlots(blocked);
 
       const mine = new Set<string>();
       (myRes.data ?? []).forEach((b: any) => {
-        TIME_SLOTS.forEach(slot => {
-          if (slot.start < b.end_time && slot.end > b.start_time) mine.add(slot.start);
-        });
+        TIME_SLOTS.forEach(slot => { if (slot.start < b.end_time && slot.end > b.start_time) mine.add(slot.start); });
       });
       setMyBookedSlots(mine);
 
       const closed = new Set<string>();
       (closuresRes.data ?? []).forEach((c: any) => {
-        TIME_SLOTS.forEach(slot => {
-          if (c.all_day || (slot.start < c.end_time && slot.end > c.start_time)) {
-            closed.add(slot.start);
-          }
-        });
+        TIME_SLOTS.forEach(slot => { if (c.all_day || (slot.start < c.end_time && slot.end > c.start_time)) closed.add(slot.start); });
       });
       setClosedSlots(closed);
-
       setLoadingSlots(false);
     }
 
@@ -184,57 +147,43 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
     }
   }
 
-  const canConfirm =
-    !!selectedDate &&
-    !!selectedSlot &&
-    (!spaceData.units || !!selectedUnitId) &&
-    !submitting;
-
+  const canConfirm = !!selectedDate && !!selectedSlot && (!spaceData.units || !!selectedUnitId) && !submitting;
   const selectedUnitName = dbUnits.find(u => u.id === selectedUnitId)?.name;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <motion.div
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative w-full max-w-lg bg-white rounded-t-3xl md:rounded-3xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-t-3xl md:rounded-3xl max-h-[92vh] overflow-y-auto"
       >
         {step === 'success' ? (
-          <div className="p-10 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', delay: 0.1 }}
-            >
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-5" />
+          <div className="p-12 text-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}>
+              <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-5" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">Booking Confirmed!</h2>
-            <p className="text-stone-500 text-sm leading-relaxed">
+            <h2 className="text-2xl font-black text-white tracking-tight mb-2">Booking Confirmed</h2>
+            <p className="text-zinc-500 text-sm leading-relaxed">
               {spaceData.name}
               {selectedUnitName ? ` · ${selectedUnitName}` : ''}
-              {' · '}
-              {format(new Date(selectedDate), 'EEE, MMM d')}
-              {' · '}
-              {selectedSlot?.label} – {selectedSlot?.endLabel}
+              {' · '}{format(new Date(selectedDate), 'EEE, MMM d')}
+              {' · '}{selectedSlot?.label} – {selectedSlot?.endLabel}
             </p>
           </div>
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-stone-100 sticky top-0 bg-white rounded-t-3xl md:rounded-t-3xl">
+            <div className="flex items-center justify-between p-5 border-b border-zinc-800 sticky top-0 bg-zinc-900 rounded-t-3xl md:rounded-t-3xl z-10">
               <div>
-                <h2 className="text-lg font-bold text-stone-900">Book {spaceData.name}</h2>
-                <p className="text-xs text-stone-400 mt-0.5">1-hour slots · up to 2 days ahead</p>
+                <h2 className="text-base font-black text-white tracking-tight">Book {spaceData.name}</h2>
+                <p className="text-xs text-zinc-600 mt-0.5 tracking-wide">1-hour slots · up to 2 days ahead</p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-stone-100 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5 text-stone-500" />
+              <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
               </button>
             </div>
 
@@ -242,16 +191,16 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               {/* Unit selector */}
               {spaceData.units && dbUnits.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-stone-700 mb-3">Select Table</p>
+                  <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Select Table</p>
                   <div className="grid grid-cols-2 gap-2">
                     {dbUnits.map(unit => (
                       <button
                         key={unit.id}
                         onClick={() => setSelectedUnitId(unit.id)}
-                        className={`py-3 px-4 rounded-xl border-2 font-medium text-sm transition-colors ${
+                        className={`py-3 px-4 rounded-xl border font-semibold text-sm transition-all ${
                           selectedUnitId === unit.id
-                            ? 'border-orange-600 bg-orange-50 text-orange-700'
-                            : 'border-stone-200 text-stone-700 hover:border-stone-300'
+                            ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                            : 'border-zinc-800 bg-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                         }`}
                       >
                         {unit.name}
@@ -263,20 +212,20 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
 
               {/* Date selector */}
               <div>
-                <p className="text-sm font-semibold text-stone-700 mb-3">Select Date</p>
+                <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase mb-3">Select Date</p>
                 <div className="grid grid-cols-3 gap-2">
                   {dates.map(d => (
                     <button
                       key={d.value}
                       onClick={() => setSelectedDate(d.value)}
-                      className={`py-3 px-2 rounded-xl border-2 transition-colors text-center ${
+                      className={`py-3 px-2 rounded-xl border transition-all text-center ${
                         selectedDate === d.value
-                          ? 'border-orange-600 bg-orange-50 text-orange-700'
-                          : 'border-stone-200 text-stone-700 hover:border-stone-300'
+                          ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                          : 'border-zinc-800 bg-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                       }`}
                     >
-                      <div className="font-semibold text-sm">{d.label}</div>
-                      <div className="text-xs text-stone-400 mt-0.5">{d.sublabel}</div>
+                      <div className="font-bold text-sm">{d.label}</div>
+                      <div className={`text-xs mt-0.5 ${selectedDate === d.value ? 'text-orange-500/70' : 'text-zinc-600'}`}>{d.sublabel}</div>
                     </button>
                   ))}
                 </div>
@@ -286,10 +235,8 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               {selectedDate && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-stone-700">Select Time</p>
-                    {loadingSlots && (
-                      <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
-                    )}
+                    <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase">Select Time</p>
+                    {loadingSlots && <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />}
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {TIME_SLOTS.map(slot => {
@@ -305,19 +252,19 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                           key={slot.start}
                           onClick={() => !blocked && setSelectedSlot(slot)}
                           disabled={blocked || loadingSlots}
-                          title={closed ? 'Space is closed at this time' : mine ? 'You already have a booking at this time' : undefined}
-                          className={`py-2.5 px-1 rounded-xl border-2 text-xs font-medium transition-colors ${
+                          title={closed ? 'Space is closed' : mine ? 'Your booking' : undefined}
+                          className={`py-2.5 px-1 rounded-xl border text-[11px] font-semibold transition-all ${
                             past
-                              ? 'border-stone-100 bg-stone-50 text-stone-300 cursor-not-allowed line-through'
+                              ? 'border-zinc-800 bg-transparent text-zinc-700 cursor-not-allowed line-through'
                               : closed
-                              ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
+                              ? 'border-red-900/30 bg-red-500/5 text-red-800 cursor-not-allowed'
                               : mine
-                              ? 'border-orange-200 bg-orange-50 text-orange-300 cursor-not-allowed'
+                              ? 'border-orange-900/30 bg-orange-500/5 text-orange-800 cursor-not-allowed'
                               : taken
-                              ? 'border-stone-100 bg-stone-50 text-stone-300 cursor-not-allowed line-through'
+                              ? 'border-zinc-800 bg-transparent text-zinc-700 cursor-not-allowed line-through'
                               : selected
-                              ? 'border-orange-600 bg-orange-600 text-white'
-                              : 'border-stone-200 text-stone-700 hover:border-orange-300 hover:bg-orange-50'
+                              ? 'border-orange-500 bg-orange-500 text-black'
+                              : 'border-zinc-800 bg-zinc-800/50 text-zinc-300 hover:border-orange-500/50 hover:text-white'
                           }`}
                         >
                           {slot.label}
@@ -325,17 +272,17 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
                       );
                     })}
                   </div>
-                  <div className="flex flex-wrap gap-3 mt-2">
-                    <span className="flex items-center gap-1.5 text-xs text-stone-400">
-                      <span className="w-3 h-3 rounded bg-stone-100 border border-stone-200 inline-block" />
+                  <div className="flex flex-wrap gap-4 mt-3">
+                    <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 tracking-wide">
+                      <span className="w-2.5 h-2.5 rounded bg-zinc-800 border border-zinc-700 inline-block" />
                       Taken
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs text-orange-400">
-                      <span className="w-3 h-3 rounded bg-orange-50 border border-orange-200 inline-block" />
-                      Your booking
+                    <span className="flex items-center gap-1.5 text-[10px] text-orange-800 tracking-wide">
+                      <span className="w-2.5 h-2.5 rounded bg-orange-500/10 border border-orange-900/30 inline-block" />
+                      Yours
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs text-red-400">
-                      <span className="w-3 h-3 rounded bg-red-50 border border-red-200 inline-block" />
+                    <span className="flex items-center gap-1.5 text-[10px] text-red-800 tracking-wide">
+                      <span className="w-2.5 h-2.5 rounded bg-red-500/5 border border-red-900/30 inline-block" />
                       Closed
                     </span>
                   </div>
@@ -343,7 +290,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               )}
 
               {error && (
-                <p className="text-red-600 text-sm bg-red-50 border border-red-100 px-4 py-3 rounded-xl">
+                <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl">
                   {error}
                 </p>
               )}
@@ -351,7 +298,7 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
               <button
                 onClick={handleConfirm}
                 disabled={!canConfirm}
-                className="w-full bg-orange-600 text-white font-semibold py-3.5 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {submitting ? 'Confirming…' : 'Confirm Booking'}

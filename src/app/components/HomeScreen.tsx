@@ -1,8 +1,15 @@
 import { motion } from 'motion/react';
-import { Filter, RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronRight, ArrowRight } from 'lucide-react';
 import type { SpaceType } from '../App';
 import { SPACES } from '../data/spaces';
 import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
+import { useAuth } from '../../lib/AuthContext';
+import { format } from 'date-fns';
+
+const SPACE_ICONS: Record<string, string> = {
+  gym: '🏋️', cricket: '🏏', futsal: '⚽', volleyball: '🏐',
+  'table-tennis': '🏓', 'pool-table': '🎱', darts: '🎯',
+};
 
 interface HomeScreenProps {
   onSpaceClick: (space: SpaceType) => void;
@@ -14,96 +21,122 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activeFilter, onClearFilter }: HomeScreenProps) {
   const { availability, loading, lastUpdated, refresh } = useSpaceAvailability();
+  const { profile } = useAuth();
+
+  const firstName = profile?.full_name?.split(' ')[0] ?? null;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const filtered = activeFilter
     ? SPACES.filter(s => s.activities.some(a => a.toLowerCase() === activeFilter.toLowerCase()))
     : SPACES;
 
   return (
-    <div className="bg-[#FFFBF5]">
-      <div className="pb-4 border-b border-stone-200">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-stone-900">Available Now</h1>
-          <button onClick={onFilterClick} className="p-2 rounded-lg hover:bg-stone-100 transition-colors">
-            <Filter className="w-6 h-6 text-stone-600" />
+    <div className="bg-zinc-950 min-h-full">
+      {/* Header */}
+      <div className="pt-2 pb-8">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-zinc-600 text-xs tracking-widest uppercase font-semibold mb-1">
+              {format(new Date(), 'EEEE, MMMM d')}
+            </p>
+            <h1 className="text-2xl font-black text-white tracking-tight leading-tight">
+              {firstName ? `${greeting},` : greeting}
+              {firstName && <span className="text-orange-500"> {firstName}.</span>}
+            </h1>
+          </div>
+          <button
+            onClick={refresh}
+            className={`mt-1 p-2.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-white hover:border-zinc-700 transition-all ${loading ? 'animate-spin' : ''}`}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
+
         {activeFilter && (
-          <div className="inline-flex items-center gap-2 bg-orange-600 text-white text-sm px-3 py-1 rounded-full">
-            <span>Filter: {activeFilter}</span>
-            <button onClick={onClearFilter} className="hover:text-orange-200 text-lg leading-none">×</button>
+          <div className="mt-4 inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs px-3 py-1.5 rounded-full font-semibold tracking-wide uppercase">
+            <span>{activeFilter}</span>
+            <button onClick={onClearFilter} className="text-orange-500 hover:text-orange-300 text-base leading-none ml-1">×</button>
           </div>
         )}
       </div>
 
-      <div className="py-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-stone-400 text-sm font-medium tracking-wide">NOW</div>
-            <button
-              onClick={refresh}
-              className="flex items-center gap-1.5 text-stone-400 text-xs hover:text-stone-600 transition-colors"
+      {/* Section label */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-zinc-600 text-[10px] font-bold tracking-[0.25em] uppercase">Spaces</p>
+        <p className="text-zinc-700 text-[10px] tracking-widest uppercase">
+          Live · {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+        </p>
+      </div>
+
+      {/* Space cards */}
+      <div className="space-y-2.5 mb-8">
+        {filtered.map((space, i) => {
+          const av = availability[space.id];
+          const isGym = space.id === 'gym';
+          const subtitle = isGym && av
+            ? `${av.available} / ${av.total} spots`
+            : space.description;
+          const statusLabel = av?.label ?? 'Open';
+          const statusType = av?.statusType ?? 'open';
+
+          return (
+            <motion.button
+              key={space.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => onSpaceClick(space.id)}
+              className="group w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 p-4 rounded-xl text-left transition-all duration-200 flex items-center gap-4"
             >
-              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-              Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-            </button>
-          </div>
+              {/* Status stripe */}
+              <div className={`w-0.5 self-stretch rounded-full shrink-0 ${
+                statusType === 'inuse' ? 'bg-red-500'
+                : statusType === 'capacity' ? 'bg-amber-500'
+                : 'bg-emerald-500'
+              }`} />
 
-          <div className="space-y-3">
-            {filtered.map(space => {
-              const av = availability[space.id];
-              const isGym = space.id === 'gym';
-              const subtitle = isGym && av
-                ? `${av.available} of ${av.total} spots available`
-                : space.description;
-              const statusLabel = av?.label ?? (isGym ? '…' : 'Open');
-              const statusType = av?.statusType ?? 'open';
+              {/* Icon */}
+              <span className="text-2xl shrink-0">{SPACE_ICONS[space.id] ?? '🏟️'}</span>
 
-              return (
-                <motion.button
-                  key={space.id}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onSpaceClick(space.id)}
-                  className="w-full bg-white border border-stone-200 p-4 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-colors text-left shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-stone-900 font-semibold mb-1">{space.name}</h3>
-                      <p className="text-stone-500 text-sm">{subtitle}</p>
-                    </div>
-                    <div className={`px-3 py-1.5 rounded-full text-sm font-medium ml-3 ${
-                      statusType === 'inuse' ? 'bg-red-600 text-white'
-                      : statusType === 'capacity' ? 'bg-orange-600 text-white'
-                      : 'bg-green-600 text-white'
-                    }`}>
-                      {statusLabel}
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </motion.div>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-bold text-base tracking-tight">{space.name}</h3>
+                <p className="text-zinc-600 text-xs mt-0.5 truncate">{subtitle}</p>
+              </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-3"
+              {/* Status badge */}
+              <div className="flex items-center gap-3 shrink-0">
+                <span className={`text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full ${
+                  statusType === 'inuse' ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  : statusType === 'capacity' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                }`}>
+                  {statusLabel}
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-2.5">
+        <button
+          onClick={onViewAllSpaces}
+          className="group w-full flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-bold py-4 px-5 rounded-xl transition-colors duration-200"
         >
-          <button
-            onClick={onViewAllSpaces}
-            className="w-full bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-orange-700 transition-colors"
-          >
-            View all spaces
-          </button>
-          <button
-            onClick={onFilterClick}
-            className="w-full bg-stone-100 text-stone-800 font-semibold py-3.5 px-4 rounded-xl hover:bg-stone-200 transition-colors"
-          >
-            Filter by activity
-          </button>
-        </motion.div>
+          <span className="text-sm tracking-wide">View all spaces</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+        <button
+          onClick={onFilterClick}
+          className="w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white font-semibold py-4 px-5 rounded-xl transition-all duration-200 text-sm"
+        >
+          Filter by activity
+        </button>
       </div>
     </div>
   );

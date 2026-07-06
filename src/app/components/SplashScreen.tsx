@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { ArrowRight } from 'lucide-react';
 
 interface SplashScreenProps {
   onGetStarted: () => void;
@@ -6,54 +7,56 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onGetStarted }: SplashScreenProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-b from-orange-600 to-orange-800 flex flex-col items-center justify-center px-8"
-    >
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,_rgba(234,88,12,0.08)_0%,_transparent_70%)]" />
+
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="text-center mb-16"
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 flex flex-col items-center"
       >
-        <div className="mb-8">
-          <div className="w-24 h-24 mx-auto bg-white rounded-3xl flex items-center justify-center mb-6 shadow-lg">
-            <svg viewBox="0 0 24 24" fill="none" className="w-14 h-14">
-              <rect x="3" y="3" width="7" height="7" rx="1" fill="#EA580C" />
-              <rect x="14" y="3" width="7" height="7" rx="1" fill="#EA580C" />
-              <rect x="3" y="14" width="7" height="7" rx="1" fill="#EA580C" />
-              <rect x="14" y="14" width="7" height="7" rx="1" fill="#EA580C" />
-            </svg>
-          </div>
+        {/* BAPS Logo — inverted to white for dark bg */}
+        <motion.img
+          src="/baps-logo.png"
+          alt="BAPS"
+          initial={{ opacity: 0, scale: 0.88 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="w-24 h-24 object-contain mb-10"
+          style={{ filter: 'brightness(0) invert(1)' }}
+        />
+
+        <div className="text-center leading-none mb-3">
+          <h1 className="text-[54px] md:text-7xl font-black text-white tracking-tighter">YOGI</h1>
+          <h1 className="text-[54px] md:text-7xl font-black text-white tracking-tighter">SPORTS</h1>
+          <h1 className="text-[54px] md:text-7xl font-black text-orange-500 tracking-tighter">COMPLEX</h1>
         </div>
 
-        <h1 className="text-4xl font-bold text-white mb-3">Yogi Sports Complex</h1>
-        <p className="text-orange-200 text-sm mt-1">Nakuru, Kenya</p>
-      </motion.div>
+        <p className="text-zinc-600 text-[10px] tracking-[0.32em] uppercase font-semibold mt-5 mb-14">
+          Nakuru · Kenya
+        </p>
 
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="w-full max-w-sm"
-      >
-        <button
+        <div className="w-10 h-px bg-zinc-800 mb-14" />
+
+        <motion.button
           onClick={onGetStarted}
-          className="w-full bg-white text-orange-600 font-semibold py-4 px-8 rounded-2xl hover:bg-orange-50 transition-colors shadow-md"
+          whileTap={{ scale: 0.97 }}
+          className="group flex items-center gap-3 border border-zinc-700 hover:border-orange-500 hover:bg-orange-500/5 text-zinc-400 hover:text-white px-10 py-4 text-[11px] font-bold tracking-[0.22em] uppercase transition-all duration-300"
         >
-          Get Started
-        </button>
+          Enter
+          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform duration-300" />
+        </motion.button>
       </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="text-orange-200 text-sm mt-8"
+        transition={{ delay: 1 }}
+        className="absolute bottom-8 text-zinc-800 text-[9px] tracking-[0.3em] uppercase"
       >
-        Reserve spaces. Track availability.
+        BAPS Swaminarayan Sanstha
       </motion.p>
-    </motion.div>
+    </div>
   );
 }
