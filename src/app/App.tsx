@@ -126,7 +126,7 @@ export default function App() {
   const showNav = currentScreen !== 'splash' && currentScreen !== 'auth';
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="h-screen bg-zinc-950 flex flex-col overflow-hidden">
       <Toaster position="top-center" theme="dark" richColors />
 
       {showNav && (
@@ -158,7 +158,7 @@ export default function App() {
         </div>
       )}
 
-      <main className={`flex-1 overflow-y-auto ${showNav ? 'pb-20 md:pb-0' : ''}`}>
+      <main className={`flex-1 min-h-0 overflow-y-auto ${showNav ? 'pb-20 md:pb-0' : ''}`}>
         {currentScreen === 'splash' && (
           <SplashScreen onGetStarted={handleGetStarted} />
         )}
