@@ -53,7 +53,7 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
         <p className="text-zinc-600 text-sm mb-9 text-center max-w-xs">Access your membership details and manage your account.</p>
         <button
           onClick={onSignIn}
-          className="bg-orange-500 hover:bg-orange-400 text-black font-black px-10 py-4 rounded-2xl transition-colors text-sm tracking-widest uppercase"
+          className="bg-violet-600 hover:bg-violet-500 text-white font-black px-10 py-4 rounded-2xl transition-colors text-sm tracking-widest uppercase"
         >
           Sign In
         </button>
@@ -92,8 +92,8 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
         </div>
 
         <div className="flex items-end gap-5 mb-6">
-          <div className="w-20 h-20 bg-orange-500 rounded-2xl flex items-center justify-center shrink-0">
-            <span className="text-black font-black text-3xl leading-none">{initial}</span>
+          <div className="w-20 h-20 bg-violet-600 rounded-2xl flex items-center justify-center shrink-0">
+            <span className="text-white font-black text-3xl leading-none">{initial}</span>
           </div>
           <div>
             <div className="flex items-center gap-2.5 mb-1">

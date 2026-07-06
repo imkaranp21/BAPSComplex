@@ -49,7 +49,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
               {firstName && (
                 <>
                   ,<br />
-                  <span className="text-orange-500">{firstName}.</span>
+                  <span className="text-violet-400">{firstName}.</span>
                 </>
               )}
             </h1>
@@ -63,9 +63,9 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
         </div>
 
         {activeFilter && (
-          <div className="mt-5 inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[10px] px-3 py-1.5 rounded-full font-black tracking-[0.2em] uppercase">
+          <div className="mt-5 inline-flex items-center gap-2 bg-violet-600/10 border border-violet-500/30 text-violet-300 text-[10px] px-3 py-1.5 rounded-full font-black tracking-[0.2em] uppercase">
             <span>{activeFilter}</span>
-            <button onClick={onClearFilter} className="text-orange-400 hover:text-orange-200 text-sm leading-none ml-1">×</button>
+            <button onClick={onClearFilter} className="text-violet-300 hover:text-violet-200 text-sm leading-none ml-1">×</button>
           </div>
         )}
       </div>
@@ -77,8 +77,10 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => onSpaceClick('gym')}
-          className="group w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 text-left mb-8 transition-all duration-200 relative overflow-hidden"
+          className="group w-full bg-zinc-900 border border-zinc-800 hover:border-violet-900/50 rounded-2xl p-6 text-left mb-8 transition-all duration-200 relative overflow-hidden shadow-lg shadow-violet-950/40"
         >
+          {/* Subtle violet glow in top-right corner of card */}
+          <div className="absolute -top-6 -right-6 w-32 h-32 bg-violet-700/15 blur-2xl rounded-full pointer-events-none" />
           {/* Status dot */}
           <div className="flex items-center gap-2 mb-6">
             <span className={`w-2 h-2 rounded-full animate-pulse ${gymPct > 80 ? 'bg-red-500' : gymPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
@@ -153,7 +155,7 @@ export function HomeScreen({ onSpaceClick, onViewAllSpaces, onFilterClick, activ
       <div className="flex gap-3">
         <button
           onClick={onViewAllSpaces}
-          className="group flex-1 flex items-center justify-between bg-orange-500 hover:bg-orange-400 text-black font-black py-4 px-5 rounded-xl transition-colors duration-200"
+          className="group flex-1 flex items-center justify-between bg-violet-600 hover:bg-violet-500 text-white font-black py-4 px-5 rounded-xl transition-colors duration-200 shadow-lg shadow-violet-900/50"
         >
           <span className="text-sm tracking-wide uppercase">All Spaces</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

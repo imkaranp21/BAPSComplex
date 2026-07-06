@@ -36,7 +36,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -138,16 +138,16 @@ export default function App() {
         <div className="md:hidden flex items-center justify-between px-5 h-14 border-b border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl sticky top-0 z-40">
           <div className="flex items-center gap-2.5">
             {logoError ? (
-              <div className="w-7 h-7 bg-orange-500 rounded-md flex items-center justify-center shrink-0">
-                <span className="text-black font-black text-xs leading-none">Y</span>
+              <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center shrink-0">
+                <span className="text-white font-black text-xs leading-none">Y</span>
               </div>
             ) : (
               <TransparentLogo
                 src="/baps-logo.png"
                 className="w-7 h-7 object-contain shrink-0"
                 fallback={
-                  <div className="w-7 h-7 bg-orange-500 rounded-md flex items-center justify-center shrink-0">
-                    <span className="text-black font-black text-xs leading-none">Y</span>
+                  <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center shrink-0">
+                    <span className="text-white font-black text-xs leading-none">Y</span>
                   </div>
                 }
               />
@@ -158,7 +158,11 @@ export default function App() {
         </div>
       )}
 
-      <main className={`flex-1 min-h-0 overflow-y-auto ${showNav ? 'pb-20 md:pb-0' : ''}`}>
+      <main className={`relative flex-1 min-h-0 overflow-y-auto ${showNav ? 'pb-20 md:pb-0' : ''}`}>
+        {/* Ambient violet glow — persists across all inner screens */}
+        {showNav && (
+          <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] bg-violet-900/20 blur-[100px] rounded-full z-0" />
+        )}
         {currentScreen === 'splash' && (
           <SplashScreen onGetStarted={handleGetStarted} />
         )}
@@ -257,7 +261,7 @@ export default function App() {
             )}
             <button
               onClick={() => setShowPendingNotice(false)}
-              className="w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-3.5 rounded-xl transition-colors"
+              className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-colors"
             >
               Got it
             </button>
