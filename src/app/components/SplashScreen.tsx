@@ -12,7 +12,10 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,_rgba(234,88,12,0.08)_0%,_transparent_70%)]" />
+      {/* Top violet glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_30%,_rgba(109,40,217,0.18)_0%,_transparent_70%)]" />
+      {/* Bottom violet glow pool */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[420px] h-[200px] bg-violet-900/25 blur-[90px] rounded-full pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 28 }}
@@ -28,8 +31,8 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
           className="mb-10"
         >
           {logoError ? (
-            <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
-              <span className="text-black font-black text-5xl leading-none">Y</span>
+            <div className="w-24 h-24 bg-violet-600 rounded-3xl flex items-center justify-center">
+              <span className="text-white font-black text-5xl leading-none">Y</span>
             </div>
           ) : (
             <div className="relative flex items-center justify-center">
@@ -40,8 +43,8 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
                 src="/baps-logo.png"
                 className="relative w-24 h-24 object-contain"
                 fallback={
-                  <div className="w-24 h-24 bg-orange-500 rounded-3xl flex items-center justify-center">
-                    <span className="text-black font-black text-5xl leading-none">Y</span>
+                  <div className="w-24 h-24 bg-violet-600 rounded-3xl flex items-center justify-center">
+                    <span className="text-white font-black text-5xl leading-none">Y</span>
                   </div>
                 }
               />
@@ -52,7 +55,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         <div className="text-center leading-none mb-3">
           <h1 className="text-[54px] md:text-7xl font-black text-white tracking-tighter">YOGI</h1>
           <h1 className="text-[54px] md:text-7xl font-black text-white tracking-tighter">SPORTS</h1>
-          <h1 className="text-[54px] md:text-7xl font-black text-orange-500 tracking-tighter">COMPLEX</h1>
+          <h1 className="text-[54px] md:text-7xl font-black text-violet-400 tracking-tighter">COMPLEX</h1>
         </div>
 
         <p className="text-zinc-600 text-[10px] tracking-[0.32em] uppercase font-semibold mt-5 mb-14">
@@ -64,7 +67,7 @@ export function SplashScreen({ onGetStarted }: SplashScreenProps) {
         <motion.button
           onClick={onGetStarted}
           whileTap={{ scale: 0.97 }}
-          className="group flex items-center gap-3 border border-zinc-700 hover:border-orange-500 hover:bg-orange-500/5 text-zinc-400 hover:text-white px-10 py-4 text-[11px] font-bold tracking-[0.22em] uppercase transition-all duration-300"
+          className="group flex items-center gap-3 border border-zinc-700 hover:border-violet-500 hover:bg-violet-600/5 text-zinc-400 hover:text-white px-10 py-4 text-[11px] font-bold tracking-[0.22em] uppercase transition-all duration-300"
         >
           Enter
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform duration-300" />
