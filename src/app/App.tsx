@@ -15,6 +15,7 @@ import { TopNav } from './components/TopNav';
 import { AnnouncementsBell } from './components/AnnouncementsBell';
 import { TransparentLogo } from './components/TransparentLogo';
 import { StaffDashboard } from './security/SecurityApp';
+import { FeedbackSheet } from './components/FeedbackSheet';
 import { useAuth } from '../lib/AuthContext';
 
 export type Screen = 'splash' | 'home' | 'all-spaces' | 'space-detail' | 'profile' | 'bookings' | 'auth';
@@ -235,6 +236,8 @@ export default function App() {
       {showNav && (
         <BottomNav activeTab={activeNavTab} onTabChange={handleNavChange} />
       )}
+
+      {showNav && <FeedbackSheet />}
 
       {showFilterModal && (
         <ActivityFilterModal
