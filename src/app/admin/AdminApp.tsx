@@ -1,9 +1,10 @@
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router';
-import { LayoutDashboard, Users, CalendarDays, Dumbbell, LogOut, Shield, Footprints, CalendarOff, Megaphone, Package, BellRing } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, Dumbbell, LogOut, Shield, Footprints, CalendarOff, Megaphone, Package, BellRing, HardDrive } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { DashboardPage } from './DashboardPage';
 import { MembersPage } from './MembersPage';
 import { StaffPage } from './StaffPage';
+import { BackupPage } from './BackupPage';
 import { BookingsPage } from './BookingsPage';
 import { GymPage } from './GymPage';
 import { WalkInsPage } from './WalkInsPage';
@@ -55,6 +56,7 @@ export function AdminApp() {
     { to: '/admin/closures', label: 'Closures', icon: <CalendarOff className="w-4 h-4" />, end: false },
     { to: '/admin/equipment', label: 'Equipment', icon: <Package className="w-4 h-4" />, end: false },
     { to: '/admin/announcements', label: 'Announcements', icon: <Megaphone className="w-4 h-4" />, end: false },
+    { to: '/admin/backup',        label: 'Backup',        icon: <HardDrive className="w-4 h-4" />, end: false },
   ];
 
   return (
@@ -110,6 +112,7 @@ export function AdminApp() {
           <Route index element={<DashboardPage />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="staff"   element={<StaffPage />} />
+          <Route path="backup"  element={<BackupPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="gym" element={<GymPage />} />
           <Route path="walk-ins" element={<WalkInsPage />} />
