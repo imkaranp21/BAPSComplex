@@ -92,8 +92,11 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
         </div>
 
         <div className="flex items-end gap-5 mb-6">
-          <div className="w-20 h-20 bg-violet-600 rounded-2xl flex items-center justify-center shrink-0">
-            <span className="text-white font-black text-3xl leading-none">{initial}</span>
+          <div className="w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-violet-600 flex items-center justify-center">
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+              : <span className="text-white font-black text-3xl leading-none">{initial}</span>
+            }
           </div>
           <div>
             <div className="flex items-center gap-2.5 mb-1">

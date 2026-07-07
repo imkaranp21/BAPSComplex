@@ -12,6 +12,7 @@ interface Member {
   membership_tier: number | null;
   membership_status: string;
   is_staff: boolean;
+  avatar_url: string | null;
   created_at: string;
   email?: string;
 }
@@ -43,7 +44,7 @@ export function MembersPage() {
   async function load() {
     const [membersRes, adminsRes] = await Promise.all([
       (supabase as any).from('profiles')
-        .select('id, full_name, phone, membership_group, membership_tier, membership_status, is_staff, created_at')
+        .select('id, full_name, phone, membership_group, membership_tier, membership_status, is_staff, avatar_url, created_at')
         .order('created_at', { ascending: false }),
       (supabase as any).from('admin_roles').select('user_id, role'),
     ]);
@@ -51,7 +52,7 @@ export function MembersPage() {
     if (membersRes.error) {
       // is_staff column may not exist yet — fall back without it
       const { data: fallback } = await (supabase as any).from('profiles')
-        .select('id, full_name, phone, membership_group, membership_tier, membership_status, created_at')
+        .select('id, full_name, phone, membership_group, membership_tier, membership_status, avatar_url, created_at')
         .order('created_at', { ascending: false });
       setMembers((fallback ?? []).map((m: any) => ({ ...m, is_staff: false })));
     } else {
@@ -174,8 +175,11 @@ export function MembersPage() {
                     onClick={() => { setSelectedMember(m); setShowDropdown(false); setAdminSearch(''); }}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left border-b border-zinc-800 last:border-0"
                   >
-                    <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
-                      {m.full_name[0]?.toUpperCase()}
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-violet-600 flex items-center justify-center text-xs font-black text-white shrink-0">
+                      {m.avatar_url
+                        ? <img src={m.avatar_url} alt={m.full_name} className="w-full h-full object-cover" />
+                        : m.full_name[0]?.toUpperCase()
+                      }
                     </div>
                     <div>
                       <p className="font-bold text-white text-sm">{m.full_name}</p>
@@ -253,8 +257,11 @@ export function MembersPage() {
                 <tr key={member.id} className="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-xs font-black text-black shrink-0">
-                        {member.full_name[0]?.toUpperCase()}
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-violet-600 flex items-center justify-center text-xs font-black text-white shrink-0">
+                        {member.avatar_url
+                          ? <img src={member.avatar_url} alt={member.full_name} className="w-full h-full object-cover" />
+                          : member.full_name[0]?.toUpperCase()
+                        }
                       </div>
                       <div>
                         <p className="font-bold text-white text-sm">{member.full_name}</p>
