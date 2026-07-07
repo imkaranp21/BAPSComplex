@@ -69,3 +69,34 @@ BEGIN
   ORDER BY b.start_time ASC;
 END;
 $$;
+
+-- 4. Feedback / suggestions table
+CREATE TABLE IF NOT EXISTS feedback (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  member_id   uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  member_name text,
+  category    text DEFAULT 'suggestion',
+  message     text NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Members can submit feedback" ON feedback;
+DROP POLICY IF EXISTS "Admins can read feedback" ON feedback;
+DROP POLICY IF EXISTS "Admins can delete feedback" ON feedback;
+
+CREATE POLICY "Members can submit feedback"
+  ON feedback FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Admins can read feedback"
+  ON feedback FOR SELECT
+  TO authenticated
+  USING (is_admin());
+
+CREATE POLICY "Admins can delete feedback"
+  ON feedback FOR DELETE
+  TO authenticated
+  USING (is_admin());
