@@ -101,7 +101,33 @@ CREATE POLICY "Admins can delete feedback"
   TO authenticated
   USING (is_admin());
 
--- 5. Delete member RPC (cascades their bookings, loans, walk-ins, feedback)
+-- 5. QR lookup — lets staff read a member's public info by UUID
+CREATE OR REPLACE FUNCTION lookup_member_by_id(member_id uuid)
+RETURNS json
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  result json;
+BEGIN
+  IF NOT (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_staff = true)
+    OR EXISTS (SELECT 1 FROM admin_roles WHERE user_id = auth.uid())
+  ) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT row_to_json(t) INTO result FROM (
+    SELECT full_name, avatar_url, membership_status, membership_tier
+    FROM profiles WHERE id = member_id
+  ) t;
+
+  RETURN result;
+END;
+$$;
+
+-- 6. Delete member RPC (cascades their bookings, loans, walk-ins, feedback)
 CREATE OR REPLACE FUNCTION delete_member(target_user_id uuid)
 RETURNS void
 SECURITY DEFINER

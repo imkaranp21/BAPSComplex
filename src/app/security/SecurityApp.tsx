@@ -52,36 +52,59 @@ interface ScannedMember {
   membership_tier: number | null;
 }
 
-function QRScanner({ onClose }: { onClose: () => void }) {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [scanning, setScanning]     = useState(true);
-  const [member, setMember]         = useState<ScannedMember | null>(null);
-  const [notFound, setNotFound]     = useState(false);
-  const [error, setError]           = useState('');
+function CameraScanner({ onResult }: { onResult: (text: string) => void }) {
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const qr = new Html5Qrcode('qr-reader');
-    scannerRef.current = qr;
+    let stopped = false;
 
     qr.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 220, height: 220 } },
       async (text) => {
-        await qr.stop();
-        setScanning(false);
-        const { data } = await (supabase as any)
-          .from('profiles')
-          .select('full_name, avatar_url, membership_status, membership_tier')
-          .eq('id', text)
-          .single();
-        if (data) setMember(data);
-        else setNotFound(true);
+        if (stopped) return;
+        stopped = true;
+        await qr.stop().catch(() => {});
+        onResult(text);
       },
       () => {}
-    ).catch(() => setError('Could not access camera. Please allow camera permission.'));
+    ).catch(() => setError('Could not access camera. Please allow camera permission and try again.'));
 
-    return () => { qr.stop().catch(() => {}); };
+    return () => { if (!stopped) qr.stop().catch(() => {}); };
   }, []);
+
+  return (
+    <>
+      <div id="qr-reader" className="w-full max-w-xs rounded-2xl overflow-hidden" />
+      {error
+        ? <p className="text-red-400 text-sm text-center">{error}</p>
+        : <p className="text-zinc-500 text-sm">Point the camera at the member's QR code</p>
+      }
+    </>
+  );
+}
+
+function QRScanner({ onClose }: { onClose: () => void }) {
+  const [scanKey, setScanKey]   = useState(0);
+  const [member, setMember]     = useState<ScannedMember | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [looking, setLooking]   = useState(false);
+  const showCamera = !member && !notFound && !looking;
+
+  async function handleResult(text: string) {
+    setLooking(true);
+    const { data } = await (supabase as any).rpc('lookup_member_by_id', { member_id: text });
+    setLooking(false);
+    if (data) setMember(data);
+    else setNotFound(true);
+  }
+
+  function reset() {
+    setMember(null);
+    setNotFound(false);
+    setScanKey(k => k + 1);
+  }
 
   const isActive = member?.membership_status === 'active';
 
@@ -95,15 +118,9 @@ function QRScanner({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
-        {scanning && (
-          <>
-            <div id="qr-reader" className="w-full max-w-xs rounded-2xl overflow-hidden" />
-            {error
-              ? <p className="text-red-400 text-sm text-center">{error}</p>
-              : <p className="text-zinc-500 text-sm">Point the camera at the member's QR code</p>
-            }
-          </>
-        )}
+        {showCamera && <CameraScanner key={scanKey} onResult={handleResult} />}
+
+        {looking && <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />}
 
         {member && (
           <div className={`w-full max-w-xs rounded-3xl border p-7 text-center ${isActive ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
@@ -120,18 +137,7 @@ function QRScanner({ onClose }: { onClose: () => void }) {
             <span className={`text-xs font-black tracking-widest uppercase px-3 py-1.5 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
               {member.membership_status}
             </span>
-            <button
-              onClick={() => { setMember(null); setNotFound(false); setScanning(true);
-                scannerRef.current?.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } },
-                  async (text) => {
-                    await scannerRef.current?.stop();
-                    setScanning(false);
-                    const { data } = await (supabase as any).from('profiles').select('full_name, avatar_url, membership_status, membership_tier').eq('id', text).single();
-                    if (data) setMember(data); else setNotFound(true);
-                  }, () => {}).catch(() => {});
-              }}
-              className="mt-5 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors"
-            >
+            <button onClick={reset} className="mt-5 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">
               Scan Another
             </button>
           </div>
@@ -142,7 +148,7 @@ function QRScanner({ onClose }: { onClose: () => void }) {
             <XCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
             <p className="text-white font-black text-lg mb-1">Not Found</p>
             <p className="text-zinc-500 text-sm mb-5">This QR code doesn't match any member.</p>
-            <button onClick={() => { setNotFound(false); setScanning(true); }} className="w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">Try Again</button>
+            <button onClick={reset} className="w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">Try Again</button>
           </div>
         )}
       </div>
