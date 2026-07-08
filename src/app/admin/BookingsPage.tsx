@@ -38,8 +38,8 @@ export function BookingsPage() {
     setLoading(true);
     let query = (supabase as any)
       .from('bookings')
-      .select('id, date, start_time, end_time, status, notes, spaces(name), space_units(name), profiles(full_name)')
-      .order('date', { ascending: true }).order('start_time', { ascending: true });
+      .select('id, date, start_time, end_time, status, notes, created_at, spaces(name), space_units(name), profiles(full_name)')
+      .order('created_at', { ascending: false });
 
     const today = format(new Date(), 'yyyy-MM-dd');
     if (dateRange === 'today') query = query.eq('date', today);
