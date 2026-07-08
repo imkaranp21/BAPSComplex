@@ -107,8 +107,19 @@ function QRScanner({ onClose }: { onClose: () => void }) {
     setLooking(true);
     const { data } = await (supabase as any).rpc('lookup_member_by_id', { member_id: text });
     setLooking(false);
-    if (data) setMember({ ...data, bookings: data.bookings ?? [] });
-    else setNotFound(true);
+    if (data) {
+      // Only show bookings that haven't ended more than 30 minutes ago
+      const now = new Date();
+      const relevantBookings = (data.bookings ?? []).filter((b: BookingSummary) => {
+        const [h, m] = b.end_time.split(':').map(Number);
+        const end = new Date();
+        end.setHours(h, m, 0, 0);
+        return (now.getTime() - end.getTime()) <= 30 * 60 * 1000;
+      });
+      setMember({ ...data, bookings: relevantBookings });
+    } else {
+      setNotFound(true);
+    }
   }
 
   async function checkIn(bookingId: string) {
