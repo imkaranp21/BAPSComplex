@@ -92,8 +92,13 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
           : (supabase as any).rpc('get_blocked_slots', { p_space_slugs: allSlugs, p_date: selectedDate }),
         supabase.from('bookings').select('start_time, end_time')
           .eq('date', selectedDate).eq('status', 'confirmed').eq('user_id', user!.id),
-        (supabase as any).from('space_closures').select('all_day, start_time, end_time')
-          .eq('space_id', dbSpaceId!).eq('date', selectedDate),
+        ((): Promise<any> => {
+          const q = (supabase as any).from('space_closures').select('all_day, start_time, end_time')
+            .eq('space_id', dbSpaceId!).eq('date', selectedDate);
+          return selectedUnitId
+            ? q.or(`space_unit_id.is.null,space_unit_id.eq.${selectedUnitId}`)
+            : q.is('space_unit_id', null);
+        })(),
       ]);
 
       const blocked = new Set<string>();

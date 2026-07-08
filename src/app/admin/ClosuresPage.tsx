@@ -5,10 +5,13 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 
 interface Space { id: string; name: string; slug: string }
+interface DbUnit { id: string; name: string }
 interface Closure {
   id: string; space_id: string; date: string; all_day: boolean;
   start_time: string | null; end_time: string | null; reason: string | null;
   spaces: { name: string } | null;
+  space_unit_id: string | null;
+  space_units: { name: string } | null;
 }
 
 const TIME_OPTIONS = Array.from({ length: 16 }, (_, i) => {
@@ -23,6 +26,7 @@ const labelClass = 'block text-[10px] font-bold text-zinc-600 uppercase tracking
 export function ClosuresPage() {
   const { user } = useAuth();
   const [spaces, setSpaces] = useState<Space[]>([]);
+  const [spaceUnits, setSpaceUnits] = useState<DbUnit[]>([]);
   const [closures, setClosures] = useState<Closure[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -31,6 +35,7 @@ export function ClosuresPage() {
   const [error, setError] = useState('');
 
   const [spaceId, setSpaceId] = useState('');
+  const [unitId, setUnitId] = useState('');
   const [date, setDate] = useState('');
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState('06:00:00');
@@ -39,12 +44,19 @@ export function ClosuresPage() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    setUnitId('');
+    if (!spaceId) { setSpaceUnits([]); return; }
+    (supabase as any).from('space_units').select('id, name').eq('space_id', spaceId).order('name')
+      .then(({ data }: any) => setSpaceUnits(data ?? []));
+  }, [spaceId]);
+
   async function load() {
     setLoading(true);
     const [spacesRes, closuresRes] = await Promise.all([
       (supabase as any).from('spaces').select('id, name, slug').order('name'),
       (supabase as any).from('space_closures')
-        .select('id, space_id, date, all_day, start_time, end_time, reason, spaces(name)')
+        .select('id, space_id, space_unit_id, date, all_day, start_time, end_time, reason, spaces(name), space_units(name)')
         .gte('date', new Date().toISOString().slice(0, 10)).order('date').order('start_time'),
     ]);
     setSpaces(spacesRes.data ?? []);
@@ -58,12 +70,14 @@ export function ClosuresPage() {
     if (!allDay && startTime >= endTime) { setError('End time must be after start time.'); return; }
     setSaving(true); setError('');
     const { error: err } = await (supabase as any).from('space_closures').insert({
-      space_id: spaceId, date, all_day: allDay,
+      space_id: spaceId,
+      space_unit_id: unitId || null,
+      date, all_day: allDay,
       start_time: allDay ? null : startTime, end_time: allDay ? null : endTime,
       reason: reason.trim() || null, created_by: user?.id,
     });
     if (err) { setError('Failed to add closure. Please try again.'); }
-    else { setShowForm(false); setReason(''); setDate(''); setAllDay(true); await load(); }
+    else { setShowForm(false); setReason(''); setDate(''); setAllDay(true); setUnitId(''); await load(); }
     setSaving(false);
   }
 
@@ -111,10 +125,22 @@ export function ClosuresPage() {
                 {spaces.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div>
+
+            {spaceUnits.length > 1 && (
+              <div>
+                <label className={labelClass}>Table / Unit</label>
+                <select value={unitId} onChange={e => setUnitId(e.target.value)} className={fieldClass}>
+                  <option value="">All tables</option>
+                  {spaceUnits.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div className={spaceUnits.length > 1 ? '' : ''}>
               <label className={labelClass}>Date</label>
               <input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} className={fieldClass} />
             </div>
+
             <div className="md:col-span-2">
               <label className={labelClass}>Reason (optional)</label>
               <input type="text" value={reason} onChange={e => setReason(e.target.value)}
@@ -189,7 +215,9 @@ export function ClosuresPage() {
                     <CalendarOff className="w-4 h-4 text-red-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-white text-sm">{c.spaces?.name}</p>
+                    <p className="font-bold text-white text-sm">
+                      {c.spaces?.name}{c.space_units?.name ? ` · ${c.space_units.name}` : ''}
+                    </p>
                     <p className="text-zinc-500 text-xs">{formatClosure(c)}</p>
                     {c.reason && <p className="text-zinc-600 text-xs mt-0.5 italic">"{c.reason}"</p>}
                   </div>
