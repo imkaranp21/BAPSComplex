@@ -55,9 +55,7 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
     setCancellingId(id);
     setCancelError(null);
     const { error } = await (supabase as any)
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', id);
+      .rpc('cancel_own_booking', { p_booking_id: id });
     if (!error) {
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
     } else {

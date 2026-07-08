@@ -55,7 +55,7 @@ export function useSpaceAvailability() {
           total: GYM_CAPACITY,
           inUse: gymCount >= GYM_CAPACITY,
           label: `${gymCount}/${GYM_CAPACITY}`,
-          statusType: gymCount >= GYM_CAPACITY ? 'inuse' : 'capacity',
+          statusType: gymCount >= GYM_CAPACITY ? 'inuse' : gymCount === 0 ? 'open' : 'capacity',
         };
       } else {
         const dbId = idMap[space.id];
