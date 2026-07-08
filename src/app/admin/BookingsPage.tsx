@@ -52,8 +52,10 @@ export function BookingsPage() {
 
   async function cancelBooking(id: string) {
     setCancelling(id);
-    await (supabase as any).from('bookings').update({ status: 'cancelled' }).eq('id', id);
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    const { error } = await (supabase as any).from('bookings').update({ status: 'cancelled' }).eq('id', id);
+    if (!error) {
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    }
     setCancelling(null);
   }
 

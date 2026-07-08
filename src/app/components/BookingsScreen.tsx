@@ -52,8 +52,14 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
 
   async function cancelBooking(id: string) {
     setCancellingId(id);
-    await (supabase as any).rpc('cancel_booking', { booking_id: id });
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .eq('user_id', user!.id);
+    if (!error) {
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    }
     setCancellingId(null);
   }
 
