@@ -113,7 +113,8 @@ BEGIN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 
-  DELETE FROM bookings        WHERE user_id  = target_user_id;
+  DELETE FROM gym_checkins    WHERE user_id   = target_user_id;
+  DELETE FROM bookings        WHERE user_id   = target_user_id;
   DELETE FROM equipment_loans WHERE member_id = target_user_id;
   DELETE FROM walk_ins        WHERE member_id = target_user_id;
   DELETE FROM feedback        WHERE member_id = target_user_id;
