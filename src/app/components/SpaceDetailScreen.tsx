@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, CalendarPlus, ArrowRight } from 'lucide-react';
+import { format } from 'date-fns';
 import type { SpaceType } from '../App';
 import { getSpace } from '../data/spaces';
 import { useSpaceAvailability } from '../../lib/useSpaceAvailability';
+import { supabase } from '../../lib/supabase';
 
 interface SpaceDetailScreenProps {
   space: SpaceType;
@@ -14,6 +17,29 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
   const spaceData = getSpace(space);
   const { availability } = useSpaceAvailability();
   const av = availability[space];
+
+  const [bookedUnitNames, setBookedUnitNames] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!spaceData.units) return;
+    async function fetchUnitStatus() {
+      const now = new Date();
+      const today = format(now, 'yyyy-MM-dd');
+      const timeStr = format(now, 'HH:mm:ss');
+      const { data: spaceRow } = await supabase.from('spaces').select('id').eq('slug', space).single();
+      if (!spaceRow) return;
+      const { data: bookings } = await (supabase as any)
+        .from('bookings')
+        .select('space_units!inner(name)')
+        .eq('space_id', spaceRow.id)
+        .eq('date', today)
+        .eq('status', 'confirmed')
+        .lte('start_time', timeStr)
+        .gt('end_time', timeStr);
+      setBookedUnitNames(new Set((bookings ?? []).map((b: any) => b.space_units?.name)));
+    }
+    fetchUnitStatus();
+  }, [space, spaceData.units]);
 
   const gymCount = av ? av.total - av.available : 0;
   const gymTotal = av?.total ?? spaceData.total;
@@ -84,9 +110,8 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
           <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase mb-4">Availability</p>
           <div className="space-y-2">
-            {spaceData.units.map((unit, i) => {
-              const available = av?.available ?? spaceData.units!.length;
-              const inUse = i >= available;
+            {spaceData.units.map((unit) => {
+              const inUse = bookedUnitNames.has(unit.name);
               return (
                 <div key={unit.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between">
                   <h3 className="text-white font-black tracking-tight uppercase text-sm">{unit.name}</h3>

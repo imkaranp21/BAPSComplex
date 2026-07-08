@@ -86,16 +86,23 @@ export function BookingModal({ space, onClose, onBooked }: BookingModalProps) {
       const conflictSlugs = SPACE_CONFLICTS[space] ?? [];
       const allSlugs = [space, ...conflictSlugs];
 
-      const [blockedRes, myRes, closuresRes] = await Promise.all([
-        (supabase as any).rpc('get_blocked_slots', { p_space_slugs: allSlugs, p_date: selectedDate }),
+      const [blockedRes, myRes, closuresRes, unitBookingsRes] = await Promise.all([
+        selectedUnitId
+          ? Promise.resolve({ data: [] })
+          : (supabase as any).rpc('get_blocked_slots', { p_space_slugs: allSlugs, p_date: selectedDate }),
         supabase.from('bookings').select('start_time, end_time')
           .eq('date', selectedDate).eq('status', 'confirmed').eq('user_id', user!.id),
         (supabase as any).from('space_closures').select('all_day, start_time, end_time')
           .eq('space_id', dbSpaceId!).eq('date', selectedDate),
+        selectedUnitId
+          ? supabase.from('bookings').select('start_time, end_time')
+              .eq('space_unit_id', selectedUnitId).eq('date', selectedDate).eq('status', 'confirmed')
+          : Promise.resolve({ data: [] }),
       ]);
 
       const blocked = new Set<string>();
-      (blockedRes.data ?? []).forEach((b: any) => {
+      const source = selectedUnitId ? (unitBookingsRes.data ?? []) : (blockedRes.data ?? []);
+      source.forEach((b: any) => {
         TIME_SLOTS.forEach(slot => { if (slot.start < b.end_time && slot.end > b.start_time) blocked.add(slot.start); });
       });
       setUnavailableSlots(blocked);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, X, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, parseISO } from 'date-fns';
@@ -58,13 +59,13 @@ export function AnnouncementsBell() {
       </button>
 
       <AnimatePresence>
-        {open && (
+        {open && createPortal(
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm"
               onClick={() => setOpen(false)}
             />
             <motion.div
@@ -72,7 +73,7 @@ export function AnnouncementsBell() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-14 md:top-16 right-0 bottom-0 w-full max-w-sm bg-zinc-950 border-l border-zinc-800 z-[60] flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-zinc-950 border-l border-zinc-800 z-[201] flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
@@ -133,7 +134,8 @@ export function AnnouncementsBell() {
                 <p className="text-center text-[10px] text-zinc-700 tracking-widest uppercase font-bold">Yogi Sports Complex · Nakuru, Kenya</p>
               </div>
             </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
     </>
