@@ -32,12 +32,13 @@ CREATE POLICY "Public read avatars"
 -- 3. RPC for the security staff portal — bypasses member RLS
 CREATE OR REPLACE FUNCTION get_staff_arrivals(p_date date DEFAULT CURRENT_DATE)
 RETURNS TABLE (
-  booking_id   uuid,
-  start_time   time,
-  end_time     time,
-  space_name   text,
-  member_name  text,
-  avatar_url   text
+  booking_id    uuid,
+  start_time    time,
+  end_time      time,
+  space_name    text,
+  member_name   text,
+  avatar_url    text,
+  checked_in_at timestamptz
 )
 SECURITY DEFINER
 SET search_path = public
@@ -55,12 +56,13 @@ BEGIN
 
   RETURN QUERY
   SELECT
-    b.id          AS booking_id,
-    b.start_time  AS start_time,
-    b.end_time    AS end_time,
-    s.name        AS space_name,
-    p.full_name   AS member_name,
-    p.avatar_url  AS avatar_url
+    b.id            AS booking_id,
+    b.start_time    AS start_time,
+    b.end_time      AS end_time,
+    s.name          AS space_name,
+    p.full_name     AS member_name,
+    p.avatar_url    AS avatar_url,
+    b.checked_in_at AS checked_in_at
   FROM bookings b
   JOIN profiles p ON b.user_id = p.id
   JOIN spaces   s ON b.space_id = s.id

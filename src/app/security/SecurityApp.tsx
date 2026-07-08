@@ -13,6 +13,7 @@ interface Arrival {
   space_name: string;
   member_name: string;
   avatar_url: string | null;
+  checked_in_at: string | null;
 }
 
 function formatTime(t: string) {
@@ -45,11 +46,20 @@ function AvatarCircle({ url, name, size = 'lg' }: { url: string | null; name: st
 }
 
 // ── QR Scanner ───────────────────────────────────────────────────────────────
+interface BookingSummary {
+  booking_id: string;
+  space_name: string;
+  start_time: string;
+  end_time: string;
+  checked_in_at: string | null;
+}
+
 interface ScannedMember {
   full_name: string;
   avatar_url: string | null;
   membership_status: string;
   membership_tier: number | null;
+  bookings: BookingSummary[];
 }
 
 function CameraScanner({ onResult }: { onResult: (text: string) => void }) {
@@ -86,18 +96,31 @@ function CameraScanner({ onResult }: { onResult: (text: string) => void }) {
 }
 
 function QRScanner({ onClose }: { onClose: () => void }) {
-  const [scanKey, setScanKey]   = useState(0);
-  const [member, setMember]     = useState<ScannedMember | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [looking, setLooking]   = useState(false);
+  const [scanKey, setScanKey]         = useState(0);
+  const [member, setMember]           = useState<ScannedMember | null>(null);
+  const [notFound, setNotFound]       = useState(false);
+  const [looking, setLooking]         = useState(false);
+  const [checkingIn, setCheckingIn]   = useState<string | null>(null);
   const showCamera = !member && !notFound && !looking;
 
   async function handleResult(text: string) {
     setLooking(true);
     const { data } = await (supabase as any).rpc('lookup_member_by_id', { member_id: text });
     setLooking(false);
-    if (data) setMember(data);
+    if (data) setMember({ ...data, bookings: data.bookings ?? [] });
     else setNotFound(true);
+  }
+
+  async function checkIn(bookingId: string) {
+    setCheckingIn(bookingId);
+    await (supabase as any).rpc('checkin_booking', { p_booking_id: bookingId });
+    setMember(prev => prev ? {
+      ...prev,
+      bookings: prev.bookings.map(b =>
+        b.booking_id === bookingId ? { ...b, checked_in_at: new Date().toISOString() } : b
+      )
+    } : null);
+    setCheckingIn(null);
   }
 
   function reset() {
@@ -109,35 +132,74 @@ function QRScanner({ onClose }: { onClose: () => void }) {
   const isActive = member?.membership_status === 'active';
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col overflow-y-auto">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 sticky top-0 bg-zinc-950 z-10">
         <p className="text-white font-black tracking-tight">Scan Member QR</p>
         <button onClick={onClose} className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
         {showCamera && <CameraScanner key={scanKey} onResult={handleResult} />}
 
         {looking && <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />}
 
         {member && (
-          <div className={`w-full max-w-xs rounded-3xl border p-7 text-center ${isActive ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
-            {member.avatar_url
-              ? <img src={member.avatar_url} alt={member.full_name} className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-zinc-700" />
-              : <div className="w-24 h-24 rounded-full bg-violet-600 flex items-center justify-center mx-auto mb-4 text-4xl font-black text-white">{member.full_name[0]}</div>
-            }
-            {isActive
-              ? <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
-              : <XCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-            }
-            <p className="text-white font-black text-xl tracking-tight mb-1">{member.full_name}</p>
-            {member.membership_tier && <p className="text-zinc-500 text-xs mb-2">Tier {member.membership_tier}</p>}
-            <span className={`text-xs font-black tracking-widest uppercase px-3 py-1.5 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-              {member.membership_status}
-            </span>
-            <button onClick={reset} className="mt-5 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">
+          <div className="w-full max-w-xs space-y-4">
+            {/* Member card */}
+            <div className={`rounded-3xl border p-6 text-center ${isActive ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+              {member.avatar_url
+                ? <img src={member.avatar_url} alt={member.full_name} className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-4 border-zinc-700" />
+                : <div className="w-20 h-20 rounded-full bg-violet-600 flex items-center justify-center mx-auto mb-3 text-3xl font-black text-white">{member.full_name[0]}</div>
+              }
+              {isActive
+                ? <CheckCircle className="w-7 h-7 text-emerald-400 mx-auto mb-2" />
+                : <XCircle className="w-7 h-7 text-red-400 mx-auto mb-2" />
+              }
+              <p className="text-white font-black text-xl tracking-tight">{member.full_name}</p>
+              {member.membership_tier && <p className="text-zinc-500 text-xs mt-0.5">Tier {member.membership_tier}</p>}
+              <span className={`inline-block mt-2 text-xs font-black tracking-widest uppercase px-3 py-1 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                {member.membership_status}
+              </span>
+            </div>
+
+            {/* Today's bookings */}
+            {member.bookings.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-zinc-600 text-[10px] font-black tracking-[0.25em] uppercase">Today's Bookings</p>
+                {member.bookings.map(b => (
+                  <div key={b.booking_id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-white font-black text-sm">{b.space_name}</p>
+                        <p className="text-zinc-500 text-xs mt-0.5">{formatTime(b.start_time)} – {formatTime(b.end_time)}</p>
+                      </div>
+                      {b.checked_in_at ? (
+                        <span className="flex items-center gap-1 text-[10px] font-black tracking-widest uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+                          <CheckCircle className="w-3 h-3" /> In
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => checkIn(b.booking_id)}
+                          disabled={!isActive || checkingIn === b.booking_id}
+                          className="flex items-center gap-1 text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-violet-600 hover:bg-violet-500 text-white transition-colors disabled:opacity-40 shrink-0"
+                        >
+                          {checkingIn === b.booking_id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
+                          Check In
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center">
+                <p className="text-zinc-500 text-sm">No bookings for today</p>
+              </div>
+            )}
+
+            <button onClick={reset} className="w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">
               Scan Another
             </button>
           </div>
@@ -525,8 +587,16 @@ export function StaffDashboard() {
                         <p className="text-zinc-700 text-xs mt-0.5">{formatTime(a.start_time)} – {formatTime(a.end_time)}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={`text-2xl font-black leading-none ${close ? 'text-amber-400' : 'text-white'}`}>{mins <= 0 ? 'Now' : `${mins}m`}</p>
-                        <p className="text-zinc-600 text-[9px] tracking-widest uppercase mt-1">{mins <= 0 ? 'overdue' : 'until arrival'}</p>
+                        {a.checked_in_at ? (
+                          <span className="flex items-center gap-1 text-[9px] font-black tracking-widest uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                            <CheckCircle className="w-3 h-3" /> Checked In
+                          </span>
+                        ) : (
+                          <>
+                            <p className={`text-2xl font-black leading-none ${close ? 'text-amber-400' : 'text-white'}`}>{mins <= 0 ? 'Now' : `${mins}m`}</p>
+                            <p className="text-zinc-600 text-[9px] tracking-widest uppercase mt-1">{mins <= 0 ? 'overdue' : 'until arrival'}</p>
+                          </>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -549,8 +619,16 @@ export function StaffDashboard() {
                           <p className="text-zinc-600 text-xs mt-0.5">{a.space_name}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-white font-black text-sm">{formatTime(a.start_time)}</p>
-                          <p className="text-zinc-700 text-[10px] mt-0.5">in {h > 0 ? `${h}h ${r}m` : `${mins}m`}</p>
+                          {a.checked_in_at ? (
+                            <span className="flex items-center gap-1 text-[9px] font-black tracking-widest uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                              <CheckCircle className="w-3 h-3" /> Checked In
+                            </span>
+                          ) : (
+                            <>
+                              <p className="text-white font-black text-sm">{formatTime(a.start_time)}</p>
+                              <p className="text-zinc-700 text-[10px] mt-0.5">in {h > 0 ? `${h}h ${r}m` : `${mins}m`}</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     );
