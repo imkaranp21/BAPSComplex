@@ -108,13 +108,16 @@ function QRScanner({ onClose }: { onClose: () => void }) {
     const { data } = await (supabase as any).rpc('lookup_member_by_id', { member_id: text });
     setLooking(false);
     if (data) {
-      // Only show bookings that haven't ended more than 30 minutes ago
+      // Show bookings that started within the last 15 minutes (early check-in window)
+      // and haven't ended yet
       const now = new Date();
       const relevantBookings = (data.bookings ?? []).filter((b: BookingSummary) => {
-        const [h, m] = b.end_time.split(':').map(Number);
-        const end = new Date();
-        end.setHours(h, m, 0, 0);
-        return (now.getTime() - end.getTime()) <= 30 * 60 * 1000;
+        const [sh, sm] = b.start_time.split(':').map(Number);
+        const [eh, em] = b.end_time.split(':').map(Number);
+        const start = new Date(); start.setHours(sh, sm, 0, 0);
+        const end   = new Date(); end.setHours(eh, em, 0, 0);
+        const earlyWindow = new Date(start.getTime() - 15 * 60 * 1000);
+        return now >= earlyWindow && now < end;
       });
       setMember({ ...data, bookings: relevantBookings });
     } else {
