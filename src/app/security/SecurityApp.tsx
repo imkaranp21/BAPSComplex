@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, RefreshCw, Loader2, UserPlus, ArrowRight } from 'lucide-react';
+import { LogOut, RefreshCw, Loader2, UserPlus, ArrowRight, ScanLine, X, CheckCircle, XCircle } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
+import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 
@@ -39,6 +40,112 @@ function AvatarCircle({ url, name, size = 'lg' }: { url: string | null; name: st
   return (
     <div className={`${dim} rounded-full bg-violet-600 flex items-center justify-center shrink-0 border-2 border-zinc-700`}>
       <span className={`font-black text-white ${text} leading-none`}>{name[0]?.toUpperCase()}</span>
+    </div>
+  );
+}
+
+// ── QR Scanner ───────────────────────────────────────────────────────────────
+interface ScannedMember {
+  full_name: string;
+  avatar_url: string | null;
+  membership_status: string;
+  membership_tier: number | null;
+}
+
+function QRScanner({ onClose }: { onClose: () => void }) {
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [scanning, setScanning]     = useState(true);
+  const [member, setMember]         = useState<ScannedMember | null>(null);
+  const [notFound, setNotFound]     = useState(false);
+  const [error, setError]           = useState('');
+
+  useEffect(() => {
+    const qr = new Html5Qrcode('qr-reader');
+    scannerRef.current = qr;
+
+    qr.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      async (text) => {
+        await qr.stop();
+        setScanning(false);
+        const { data } = await (supabase as any)
+          .from('profiles')
+          .select('full_name, avatar_url, membership_status, membership_tier')
+          .eq('id', text)
+          .single();
+        if (data) setMember(data);
+        else setNotFound(true);
+      },
+      () => {}
+    ).catch(() => setError('Could not access camera. Please allow camera permission.'));
+
+    return () => { qr.stop().catch(() => {}); };
+  }, []);
+
+  const isActive = member?.membership_status === 'active';
+
+  return (
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <p className="text-white font-black tracking-tight">Scan Member QR</p>
+        <button onClick={onClose} className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+        {scanning && (
+          <>
+            <div id="qr-reader" className="w-full max-w-xs rounded-2xl overflow-hidden" />
+            {error
+              ? <p className="text-red-400 text-sm text-center">{error}</p>
+              : <p className="text-zinc-500 text-sm">Point the camera at the member's QR code</p>
+            }
+          </>
+        )}
+
+        {member && (
+          <div className={`w-full max-w-xs rounded-3xl border p-7 text-center ${isActive ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+            {member.avatar_url
+              ? <img src={member.avatar_url} alt={member.full_name} className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-zinc-700" />
+              : <div className="w-24 h-24 rounded-full bg-violet-600 flex items-center justify-center mx-auto mb-4 text-4xl font-black text-white">{member.full_name[0]}</div>
+            }
+            {isActive
+              ? <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
+              : <XCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            }
+            <p className="text-white font-black text-xl tracking-tight mb-1">{member.full_name}</p>
+            {member.membership_tier && <p className="text-zinc-500 text-xs mb-2">Tier {member.membership_tier}</p>}
+            <span className={`text-xs font-black tracking-widest uppercase px-3 py-1.5 rounded-full ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+              {member.membership_status}
+            </span>
+            <button
+              onClick={() => { setMember(null); setNotFound(false); setScanning(true);
+                scannerRef.current?.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } },
+                  async (text) => {
+                    await scannerRef.current?.stop();
+                    setScanning(false);
+                    const { data } = await (supabase as any).from('profiles').select('full_name, avatar_url, membership_status, membership_tier').eq('id', text).single();
+                    if (data) setMember(data); else setNotFound(true);
+                  }, () => {}).catch(() => {});
+              }}
+              className="mt-5 w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors"
+            >
+              Scan Another
+            </button>
+          </div>
+        )}
+
+        {notFound && (
+          <div className="w-full max-w-xs rounded-3xl border border-red-500/30 bg-red-500/5 p-7 text-center">
+            <XCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+            <p className="text-white font-black text-lg mb-1">Not Found</p>
+            <p className="text-zinc-500 text-sm mb-5">This QR code doesn't match any member.</p>
+            <button onClick={() => { setNotFound(false); setScanning(true); }} className="w-full py-3 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-bold hover:bg-zinc-700 transition-colors">Try Again</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -247,6 +354,7 @@ export function StaffDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [setupError, setSetupError] = useState(false);
   const [tick, setTick] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
   // track which booking IDs we've already notified so we don't fire twice
   const notifiedRef = useState(() => new Set<string>())[0];
 
@@ -308,6 +416,13 @@ export function StaffDashboard() {
           <p className="text-white font-black text-sm tracking-tight leading-none">DOOR CHECK</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowScanner(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-500/30 bg-violet-600/10 text-violet-400 hover:bg-violet-600/20 transition-all text-xs font-black uppercase tracking-widest"
+          >
+            <ScanLine className="w-3.5 h-3.5" />
+            Scan
+          </button>
           <button onClick={() => load(true)} className={`p-2 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-white transition-all ${refreshing ? 'animate-spin' : ''}`}>
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
@@ -317,6 +432,8 @@ export function StaffDashboard() {
           </button>
         </div>
       </div>
+
+      {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-6 space-y-8">
         {/* Notification permission nudge */}

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, User, Package } from 'lucide-react';
+import { LogOut, User, Package, QrCode, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -20,6 +21,7 @@ interface ProfileScreenProps {
 export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
   const { user, profile, signOut } = useAuth();
   const [loans, setLoans] = useState<ActiveLoan[]>([]);
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (user) fetchLoans();
@@ -92,11 +94,20 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
         </div>
 
         <div className="flex items-end gap-5 mb-6">
-          <div className="w-20 h-20 rounded-2xl shrink-0 overflow-hidden bg-violet-600 flex items-center justify-center">
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
-              : <span className="text-white font-black text-3xl leading-none">{initial}</span>
-            }
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-violet-600 flex items-center justify-center">
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+                : <span className="text-white font-black text-3xl leading-none">{initial}</span>
+              }
+            </div>
+            <button
+              onClick={() => setShowQR(true)}
+              className="absolute -bottom-2 -right-2 w-7 h-7 bg-violet-600 hover:bg-violet-500 rounded-full flex items-center justify-center shadow-lg transition-colors"
+              title="Show membership QR code"
+            >
+              <QrCode className="w-3.5 h-3.5 text-white" />
+            </button>
           </div>
           <div>
             <div className="flex items-center gap-2.5 mb-1">
@@ -110,6 +121,28 @@ export function ProfileScreen({ onSignIn }: ProfileScreenProps) {
             </h1>
           </div>
         </div>
+
+        {/* QR modal */}
+        {showQR && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/80 backdrop-blur-sm">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-7 w-full max-w-xs text-center">
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-white font-black tracking-tight">Membership Card</p>
+                <button onClick={() => setShowQR(false)} className="w-7 h-7 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="bg-white rounded-2xl p-4 inline-block mb-5">
+                <QRCodeSVG value={user!.id} size={180} bgColor="#ffffff" fgColor="#09090b" level="M" />
+              </div>
+              <p className="text-white font-black text-lg tracking-tight">{profile?.full_name}</p>
+              <p className={`text-xs font-bold tracking-widest uppercase mt-1 ${statusTextColor}`}>
+                {membershipLabel} Member
+              </p>
+              <p className="text-zinc-700 text-[10px] mt-4">Show this to staff at the door</p>
+            </div>
+          </div>
+        )}
 
         {/* Contact info */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
