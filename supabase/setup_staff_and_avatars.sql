@@ -100,3 +100,24 @@ CREATE POLICY "Admins can delete feedback"
   ON feedback FOR DELETE
   TO authenticated
   USING (is_admin());
+
+-- 5. Delete member RPC (cascades their bookings, loans, walk-ins, feedback)
+CREATE OR REPLACE FUNCTION delete_member(target_user_id uuid)
+RETURNS void
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM admin_roles WHERE user_id = auth.uid()) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  DELETE FROM bookings        WHERE user_id  = target_user_id;
+  DELETE FROM equipment_loans WHERE member_id = target_user_id;
+  DELETE FROM walk_ins        WHERE member_id = target_user_id;
+  DELETE FROM feedback        WHERE member_id = target_user_id;
+  DELETE FROM profiles        WHERE id        = target_user_id;
+  DELETE FROM auth.users      WHERE id        = target_user_id;
+END;
+$$;
