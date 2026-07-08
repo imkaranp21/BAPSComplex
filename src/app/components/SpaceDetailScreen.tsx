@@ -28,15 +28,9 @@ export function SpaceDetailScreen({ space, onBack, onBookClick }: SpaceDetailScr
       const timeStr = format(now, 'HH:mm:ss');
       const { data: spaceRow } = await supabase.from('spaces').select('id').eq('slug', space).single();
       if (!spaceRow) return;
-      const { data: bookings } = await (supabase as any)
-        .from('bookings')
-        .select('space_units!inner(name)')
-        .eq('space_id', spaceRow.id)
-        .eq('date', today)
-        .eq('status', 'confirmed')
-        .lte('start_time', timeStr)
-        .gt('end_time', timeStr);
-      setBookedUnitNames(new Set((bookings ?? []).map((b: any) => b.space_units?.name)));
+      const { data: rows } = await (supabase as any)
+        .rpc('get_booked_unit_names', { p_space_id: spaceRow.id, p_date: today, p_time: timeStr });
+      setBookedUnitNames(new Set((rows ?? []).map((r: any) => r.unit_name)));
     }
     fetchUnitStatus();
   }, [space, spaceData.units]);

@@ -32,6 +32,7 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) fetchBookings();
@@ -52,13 +53,16 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
 
   async function cancelBooking(id: string) {
     setCancellingId(id);
-    const { error } = await supabase
+    setCancelError(null);
+    const { error } = await (supabase as any)
       .from('bookings')
       .update({ status: 'cancelled' })
       .eq('id', id)
       .eq('user_id', user!.id);
     if (!error) {
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    } else {
+      setCancelError(error.message ?? 'Could not cancel booking.');
     }
     setCancellingId(null);
   }
@@ -91,6 +95,12 @@ export function BookingsScreen({ onSignIn }: BookingsScreenProps) {
         <p className="text-zinc-700 text-[10px] font-black tracking-[0.3em] uppercase mb-2">Your</p>
         <h1 className="text-5xl font-black text-white tracking-tighter uppercase leading-none">Bookings</h1>
       </motion.div>
+
+      {cancelError && (
+        <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+          <p className="text-red-400 text-xs font-bold">{cancelError}</p>
+        </div>
+      )}
 
       {/* Upcoming */}
       <section className="mb-10">
