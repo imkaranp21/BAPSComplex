@@ -59,6 +59,14 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
     }
   }
 
+  function validatePhone(raw: string): string | null {
+    const digits = raw.replace(/[\s\-().]/g, '');
+    if (/^\+254\d{9}$/.test(digits)) return digits;
+    if (/^254\d{9}$/.test(digits))   return `+${digits}`;
+    if (/^0\d{9}$/.test(digits))     return digits;
+    return null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -88,6 +96,11 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
     } else {
       if (!photoFile) {
         setError('A photo is required to register. Please upload a clear photo of yourself.');
+        setSubmitting(false);
+        return;
+      }
+      if (phone.trim() && !validatePhone(phone)) {
+        setError('Enter a valid Kenyan number — e.g. 0712345678 or +254712345678 (10 digits starting with 0, or +254 followed by 9 digits).');
         setSubmitting(false);
         return;
       }
@@ -294,7 +307,7 @@ export function AuthScreen({ onSuccess, onBack, defaultMode = 'login' }: AuthScr
                 <div>
                   <label className={labelClass}>Phone</label>
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="+254 700 000 000" className={inputClass} autoComplete="tel" required />
+                    placeholder="0712 345 678" className={inputClass} autoComplete="tel" required />
                 </div>
               </>
             )}
