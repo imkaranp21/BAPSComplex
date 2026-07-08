@@ -76,7 +76,7 @@ export function ClosuresPage() {
       start_time: allDay ? null : startTime, end_time: allDay ? null : endTime,
       reason: reason.trim() || null, created_by: user?.id,
     });
-    if (err) { setError('Failed to add closure. Please try again.'); }
+    if (err) { setError(err.message ?? 'Failed to add closure. Please try again.'); }
     else { setShowForm(false); setReason(''); setDate(''); setAllDay(true); setUnitId(''); await load(); }
     setSaving(false);
   }
