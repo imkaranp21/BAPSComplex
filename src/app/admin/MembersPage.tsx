@@ -98,7 +98,10 @@ export function MembersPage() {
     if (!deleteConfirm) return;
     setDeleting(true);
     const { error } = await (supabase as any).rpc('delete_member', { target_user_id: deleteConfirm.id });
-    if (!error) {
+    if (error) {
+      console.error('delete_member error:', error);
+      alert(`Could not delete member: ${error.message}`);
+    } else {
       setMembers(prev => prev.filter(m => m.id !== deleteConfirm.id));
       setAdminRoles(prev => prev.filter(a => a.user_id !== deleteConfirm.id));
     }
