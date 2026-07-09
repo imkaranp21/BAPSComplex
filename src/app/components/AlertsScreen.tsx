@@ -123,12 +123,34 @@ export function AlertsScreen({ onBack, onSave }: AlertsScreenProps) {
               </div>
             </div>
           ) : permission === 'denied' ? (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 p-4 rounded-xl">
-              <BellOff className="w-5 h-5 text-red-500 shrink-0" />
-              <div>
-                <p className="text-red-800 font-semibold text-sm">Notifications blocked</p>
-                <p className="text-red-600 text-xs mt-0.5">Go to your browser or device settings and allow notifications for this site.</p>
+            <div className="bg-red-50 border border-red-200 p-4 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <BellOff className="w-5 h-5 text-red-500 shrink-0" />
+                <p className="text-red-800 font-semibold text-sm">Notifications are blocked</p>
               </div>
+              <p className="text-red-700 text-xs font-medium mb-2">To unblock, follow these steps:</p>
+              {/android/i.test(navigator.userAgent) ? (
+                <ol className="text-red-600 text-xs space-y-1 list-decimal list-inside">
+                  <li>Open your phone's <strong>Settings</strong></li>
+                  <li>Go to <strong>Apps</strong> → find this app</li>
+                  <li>Tap <strong>Permissions</strong> → <strong>Notifications</strong> → Allow</li>
+                  <li>Come back and refresh</li>
+                </ol>
+              ) : /iphone|ipad|ipod/i.test(navigator.userAgent) ? (
+                <ol className="text-red-600 text-xs space-y-1 list-decimal list-inside">
+                  <li>Open iPhone <strong>Settings</strong></li>
+                  <li>Scroll down and find this app</li>
+                  <li>Tap <strong>Notifications</strong> → turn on <strong>Allow Notifications</strong></li>
+                  <li>Come back and refresh</li>
+                </ol>
+              ) : (
+                <ol className="text-red-600 text-xs space-y-1 list-decimal list-inside">
+                  <li>Click the <strong>lock icon</strong> in the browser address bar</li>
+                  <li>Click <strong>Site settings</strong></li>
+                  <li>Find <strong>Notifications</strong> → change to <strong>Allow</strong></li>
+                  <li>Refresh the page</li>
+                </ol>
+              )}
             </div>
           ) : (
             <button
