@@ -485,7 +485,9 @@ export function StaffDashboard() {
 
   const arriving = arrivals.filter(a => { const m = minutesUntil(a.start_time); return m >= -10 && m <= 30; });
   const upcoming = arrivals.filter(a => minutesUntil(a.start_time) > 30);
-  const current  = arrivals.filter(a => { const m = minutesUntil(a.start_time); return m < -10 && minutesUntil(a.end_time) > 0; });
+  const allCurrent = arrivals.filter(a => { const m = minutesUntil(a.start_time); return m < -10 && minutesUntil(a.end_time) > 0; });
+  const inside  = allCurrent.filter(a => a.checked_in_at !== null);
+  const noShow  = allCurrent.filter(a => a.checked_in_at === null);
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -552,11 +554,11 @@ export function StaffDashboard() {
           <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 text-violet-400 animate-spin" /></div>
         ) : (
           <>
-            {current.length > 0 && (
+            {inside.length > 0 && (
               <section>
                 <p className="text-zinc-600 text-[10px] font-black tracking-[0.3em] uppercase mb-3">Inside Now</p>
                 <div className="space-y-2">
-                  {current.map(a => (
+                  {inside.map(a => (
                     <div key={a.booking_id} className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4">
                       <AvatarCircle url={a.avatar_url} name={a.member_name} size="sm" />
                       <div className="flex-1 min-w-0">
@@ -566,6 +568,26 @@ export function StaffDashboard() {
                       <div className="text-right shrink-0">
                         <span className="text-[9px] font-black tracking-[0.2em] uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Inside</span>
                         <p className="text-zinc-600 text-[10px] mt-1">Until {formatTime(a.end_time)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {noShow.length > 0 && (
+              <section>
+                <p className="text-zinc-600 text-[10px] font-black tracking-[0.3em] uppercase mb-3">Didn't Show Up</p>
+                <div className="space-y-2">
+                  {noShow.map(a => (
+                    <div key={a.booking_id} className="bg-zinc-900 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4">
+                      <AvatarCircle url={a.avatar_url} name={a.member_name} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-white text-sm uppercase tracking-tight truncate">{a.member_name}</p>
+                        <p className="text-zinc-500 text-xs mt-0.5 truncate">{a.space_name} · {formatTime(a.start_time)} – {formatTime(a.end_time)}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[9px] font-black tracking-[0.2em] uppercase text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">No Show</span>
                       </div>
                     </div>
                   ))}
