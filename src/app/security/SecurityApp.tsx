@@ -560,8 +560,8 @@ export function StaffDashboard() {
                     <div key={a.booking_id} className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4">
                       <AvatarCircle url={a.avatar_url} name={a.member_name} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-white text-sm uppercase tracking-tight">{a.member_name}</p>
-                        <p className="text-zinc-500 text-xs mt-0.5">{a.space_name}</p>
+                        <p className="font-black text-white text-sm uppercase tracking-tight truncate">{a.member_name}</p>
+                        <p className="text-zinc-500 text-xs mt-0.5 truncate">{a.space_name}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <span className="text-[9px] font-black tracking-[0.2em] uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Inside</span>
@@ -596,8 +596,8 @@ export function StaffDashboard() {
                         {close && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-zinc-900 animate-pulse" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-white text-xl uppercase tracking-tighter leading-none">{a.member_name}</p>
-                        <p className="text-zinc-500 text-sm mt-1">{a.space_name}</p>
+                        <p className="font-black text-white text-xl uppercase tracking-tighter leading-none truncate">{a.member_name}</p>
+                        <p className="text-zinc-500 text-sm mt-1 truncate">{a.space_name}</p>
                         <p className="text-zinc-700 text-xs mt-0.5">{formatTime(a.start_time)} – {formatTime(a.end_time)}</p>
                       </div>
                       <div className="text-right shrink-0">
@@ -629,8 +629,8 @@ export function StaffDashboard() {
                       <div key={a.booking_id} className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-4 flex items-center gap-4 transition-all">
                         <AvatarCircle url={a.avatar_url} name={a.member_name} size="sm" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-black text-white text-sm uppercase tracking-tight">{a.member_name}</p>
-                          <p className="text-zinc-600 text-xs mt-0.5">{a.space_name}</p>
+                          <p className="font-black text-white text-sm uppercase tracking-tight truncate">{a.member_name}</p>
+                          <p className="text-zinc-600 text-xs mt-0.5 truncate">{a.space_name}</p>
                         </div>
                         <div className="text-right shrink-0">
                           {a.checked_in_at ? (
