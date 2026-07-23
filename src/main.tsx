@@ -1,11 +1,22 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
+import { lazy, Suspense } from "react";
 import { AuthProvider } from "./lib/AuthContext";
 import { isMissingConfig } from "./lib/supabase";
 import App from "./app/App.tsx";
-import { AdminApp } from "./app/admin/AdminApp.tsx";
-import { SecurityApp } from "./app/security/SecurityApp.tsx";
 import "./styles/index.css";
+
+const AdminApp    = lazy(() => import("./app/admin/AdminApp").then(m => ({ default: m.AdminApp })));
+const SecurityApp = lazy(() => import("./app/security/SecurityApp").then(m => ({ default: m.SecurityApp })));
+
+function FullScreenSpinner() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 32, height: 32, border: '2px solid #7c3aed', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 const root = createRoot(document.getElementById("root")!);
 
@@ -46,8 +57,8 @@ if (isMissingConfig) {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/admin/*" element={<AdminApp />} />
-          <Route path="/staff/*" element={<SecurityApp />} />
+          <Route path="/admin/*" element={<Suspense fallback={<FullScreenSpinner />}><AdminApp /></Suspense>} />
+          <Route path="/staff/*" element={<Suspense fallback={<FullScreenSpinner />}><SecurityApp /></Suspense>} />
           <Route path="/*" element={<App />} />
         </Routes>
       </BrowserRouter>

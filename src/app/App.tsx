@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Toaster } from 'sonner';
 import { SplashScreen } from './components/SplashScreen';
 import { HomeScreen } from './components/HomeScreen';
@@ -14,7 +14,7 @@ import { BottomNav, type NavTab } from './components/BottomNav';
 import { TopNav } from './components/TopNav';
 import { AnnouncementsBell } from './components/AnnouncementsBell';
 import { TransparentLogo } from './components/TransparentLogo';
-import { StaffDashboard } from './security/SecurityApp';
+const StaffDashboard = lazy(() => import('./security/SecurityApp').then(m => ({ default: m.StaffDashboard })));
 import { FeedbackSheet } from './components/FeedbackSheet';
 import { useAuth } from '../lib/AuthContext';
 
@@ -50,7 +50,11 @@ export default function App() {
 
   // Staff users skip the member app entirely and land on the door-check portal
   if (user && profile && isStaff && !isAdmin) {
-    return <StaffDashboard />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950 flex items-center justify-center"><div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>}>
+        <StaffDashboard />
+      </Suspense>
+    );
   }
 
   const handleGetStarted = () => {

@@ -31,6 +31,19 @@ export default defineConfig({
     },
   },
 
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Keep these heavy deps in their own cached chunk
+          'vendor-motion': ['motion'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-date': ['date-fns'],
+        },
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })
